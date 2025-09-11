@@ -87,7 +87,7 @@
         /* 定義每個分類卡片的背景色 */
         #basicInfoCard { background-color: #1a232f; }
         #sceneDetailsCard { background-color: #2f1a23; }
-        #actionCard { background-color: #231a2f; }
+        #characterSettingsCard { background-color: #231a2f; }
         #clothingCard { background-color: #1a2f23; }
     </style>
 </head>
@@ -245,9 +245,50 @@
                 </div>
             </div>
 
-            <!-- 左下：動作設定 -->
-            <div id="actionCard" class="category-card">
-                <div class="text-xl font-bold mb-4">動作設定</div>
+            <!-- 左下：角色設定 -->
+            <div id="characterSettingsCard" class="category-card">
+                <div class="text-xl font-bold mb-4">角色設定</div>
+                <div class="flex flex-col mb-4">
+                    <label for="age" class="mb-2 text-sm font-semibold">年紀</label>
+                    <select id="age" class="w-full rounded-md">
+                        <option value="20-29歲" selected>20-29歲</option>
+                        <option value="30-39歲">30-39歲</option>
+                        <option value="40-49歲">40-49歲</option>
+                        <option value="50-59歲">50-59歲</option>
+                        <option value="60-69歲">60-69歲</option>
+                        <option value="70-79歲">70-79歲</option>
+                        <option value="80-89歲">80-89歲</option>
+                        <option value="90-99歲">90-99歲</option>
+                        <option value="100歲以上">100歲以上</option>
+                    </select>
+                </div>
+                <div class="flex flex-col mb-4">
+                    <label for="impression" class="mb-2 text-sm font-semibold">氣質與觀感</label>
+                    <select id="impression" class="w-full rounded-md">
+                        <optgroup label="年輕感">
+                            <option value="年輕感十足" selected>年輕感十足</option>
+                            <option value="青春洋溢">青春洋溢</option>
+                            <option value="活潑開朗">活潑開朗</option>
+                            <option value="古靈精怪">古靈精怪</option>
+                            <option value="陽光自信">陽光自信</option>
+                        </optgroup>
+                        <optgroup label="成熟感">
+                            <option value="成熟穩重">成熟穩重</option>
+                            <option value="幹練專業">幹練專業</option>
+                            <option value="帶有優雅氣質">帶有優雅氣質</option>
+                            <option value="氣質端莊">氣質端莊</option>
+                            <option value="溫柔內斂">溫柔內斂</option>
+                        </optgroup>
+                        <optgroup label="特殊氣質">
+                            <option value="神秘莫測">神秘莫測</option>
+                            <option value="冷靜冷酷">冷靜冷酷</option>
+                            <option value="堅毅不拔">堅毅不拔</option>
+                            <option value="和藹可親">和藹可親</option>
+                            <option value="書卷氣質">書卷氣質</option>
+                            <option value="戰鬥氣息">戰鬥氣息</option>
+                        </optgroup>
+                    </select>
+                </div>
                 <div class="flex flex-col mb-4">
                     <label for="pose" class="mb-2 text-sm font-semibold">動作姿勢</label>
                     <select id="pose" class="w-full rounded-md">
@@ -503,22 +544,28 @@
         generateBtn.addEventListener('click', () => {
             // 獲取所有選單的值
             const style = document.getElementById('style').value;
-            const pose = document.getElementById('pose').value;
             const proportion = document.getElementById('proportion').value;
+            const renderStyle = document.getElementById('renderStyle').value;
             const material = document.getElementById('material').value;
+            const stand = document.getElementById('stand').value;
+            const background = document.getElementById('background').value;
+            const angle = document.getElementById('angle').value;
+            const lighting = document.getElementById('lighting').value;
+            const sceneObjects = document.getElementById('sceneObjects').value;
+
+            // 獲取新的角色設定值
+            const age = document.getElementById('age').value;
+            const impression = document.getElementById('impression').value;
+            const pose = document.getElementById('pose').value;
+            const handPose = document.getElementById('handPose').value;
+            const faceExpression = document.getElementById('faceExpression').value;
+            
             const upperwear = document.getElementById('upperwear').value;
             const lowerwear = document.getElementById('lowerwear').value;
             const shoes = document.getElementById('shoes').value;
             const socks = document.getElementById('socks').value;
             const accessories = document.getElementById('accessories').value;
-            const handPose = document.getElementById('handPose').value;
-            const faceExpression = document.getElementById('faceExpression').value;
-            const stand = document.getElementById('stand').value;
-            const angle = document.getElementById('angle').value;
-            const background = document.getElementById('background').value;
-            const renderStyle = document.getElementById('renderStyle').value;
-            const lighting = document.getElementById('lighting').value;
-            const sceneObjects = document.getElementById('sceneObjects').value;
+            
             const customPrompt = document.getElementById('customPrompt').value.trim();
             const hasPhoto = document.getElementById('hasPhoto').checked;
 
@@ -538,6 +585,9 @@
             } else {
                 prompt += `完全渲染, `;
             }
+            
+            // 增加年紀和氣質描述
+            prompt += `年紀: ${age}, 氣質: ${impression}, `;
             
             prompt += `風格: ${style}, 材質: ${material}, `;
             prompt += `動作: ${pose}, `;
