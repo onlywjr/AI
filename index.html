@@ -314,6 +314,8 @@
                             <option value="襯衫">襯衫</option>
                             <option value="連帽衫">連帽衫</option>
                             <option value="無袖背心">無袖背心</option>
+                            <option value="短版上衣">短版上衣</option>
+                            <option value="超短版上衣">超短版上衣</option>
                             <option value="西裝外套">西裝外套</option>
                             <option value="毛衣">毛衣</option>
                             <option value="運動外套">運動外套</option>
@@ -343,6 +345,7 @@
                             <option value="短褲">短褲</option>
                             <option value="西裝褲">西裝褲</option>
                             <option value="緊身褲">緊身褲</option>
+                            <option value="寬褲裙">寬褲裙</option>
                         </optgroup>
                         <optgroup label="幻想與特殊">
                             <option value="戰裙">戰裙</option>
@@ -455,6 +458,10 @@
         const promptText = document.getElementById('promptText');
         const styleSelect = document.getElementById('style');
         const styleDescription = document.getElementById('style-description');
+        const hasPhotoCheckbox = document.getElementById('hasPhoto');
+        const customPromptTextarea = document.getElementById('customPrompt');
+
+        const FACE_PROMPTS = '臉部細節高度還原，精緻臉部特徵，保留人臉細節，與上傳照片中的臉部特徵完全一致';
 
         // 定義風格說明的物件
         const styleDescriptions = {
@@ -474,6 +481,22 @@
             const selectedStyle = styleSelect.value;
             styleDescription.textContent = styleDescriptions[selectedStyle] || '';
         });
+
+        // 監聽是否有上傳照片的勾選框
+        hasPhotoCheckbox.addEventListener('change', () => {
+            if (hasPhotoCheckbox.checked) {
+                // 如果勾選，在自訂提示詞中加入臉部細節的提示詞
+                if (!customPromptTextarea.value.includes(FACE_PROMPTS)) {
+                    customPromptTextarea.value += (customPromptTextarea.value.length > 0 ? '\n' : '') + FACE_PROMPTS;
+                }
+            } else {
+                // 如果取消勾選，移除臉部細節的提示詞
+                customPromptTextarea.value = customPromptTextarea.value.replace(FACE_PROMPTS, '').trim();
+                // 移除多餘的換行符號
+                customPromptTextarea.value = customPromptTextarea.value.replace(/\n\s*\n/g, '\n').trim();
+            }
+        });
+
 
         // 監聽生成按鈕的點擊事件
         generateBtn.addEventListener('click', () => {
