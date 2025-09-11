@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D人偶模型提示詞生成器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117; /* 更深的背景 */
+            color: #c9d1d9; /* 柔和的淺色文字 */
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            background-color: #161b22; /* 主容器背景 */
+            border: 1px solid #30363d;
+        }
+        .category-card {
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s ease-in-out;
+        }
+        .category-card:hover {
+            transform: translateY(-4px);
+        }
+        select, textarea {
+            background-color: #0d1117;
+            border: 1px solid #30363d;
+            color: #c9d1d9;
+            padding: 0.6rem 0.8rem;
+        }
+        select:focus, textarea:focus {
+            outline: none;
+            border-color: #58a6ff; /* 藍色焦點 */
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);
+        }
+        button {
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+        }
+        #generateBtn {
+            background-color: #2183e2;
+            color: white;
+        }
+        #generateBtn:hover {
+            background-color: #1b6cb8;
+        }
+        #copyBtn {
+            background-color: #2da44e;
+            color: white;
+        }
+        #copyBtn:hover {
+            background-color: #278d43;
+        }
+        input[type="checkbox"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 1.5rem;
+            height: 1.5rem;
+            background-color: #0d1117;
+            border: 1px solid #30363d;
+            cursor: pointer;
+            position: relative;
+        }
+        input[type="checkbox"]:checked {
+            background-color: #58a6ff;
+            border-color: #58a6ff;
+        }
+        input[type="checkbox"]:checked::before {
+            content: '✓';
+            color: white;
+            font-size: 1rem;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        /* 定義每個分類卡片的背景色 */
+        #basicInfoCard { background-color: #1a232f; }
+        #sceneDetailsCard { background-color: #2f1a23; }
+        #actionCard { background-color: #231a2f; }
+        #clothingCard { background-color: #1a2f23; }
+    </style>
+</head>
+<body class="p-4 sm:p-8 flex items-center justify-center">
+    <div class="container mx-auto p-6 rounded-xl shadow-2xl">
+        <h1 class="text-3xl sm:text-4xl font-bold text-center mb-2 text-white">3D人偶模型提示詞生成器</h1>
+        <p class="text-center text-gray-400 mb-8">透過選擇不同的項目來組合出您獨特的 3D 人物模型提示詞。</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <!-- 左上：基本資訊 -->
+            <div id="basicInfoCard" class="category-card">
+                <div class="text-xl font-bold mb-4">基本資訊</div>
+                <div class="flex flex-col mb-4">
+                    <label for="style" class="mb-2 text-sm font-semibold">風格</label>
+                    <select id="style" class="w-full rounded-md">
+                        <option value="動漫風" selected>動漫風</option>
+                        <option value="寫實風">寫實風</option>
+                        <option value="奇幻風">奇幻風</option>
+                        <option value="科幻風">科幻風</option>
+                        <option value="蒸汽龐克風">蒸汽龐克風</option>
+                        <option value="賽博龐克風">賽博龐克風</option>
+                        <option value="水彩畫風">水彩畫風</option>
+                        <option value="Q版">Q版</option>
+                        <option value="黏土人風">黏土人風</option>
+                    </select>
+                    <p id="style-description" class="text-xs text-gray-400 mt-2">誇張的眼睛與獨特髮型，呈現生動且富有情感的日式動畫風格。</p>
+                </div>
+                <div class="flex flex-col mb-4">
+                    <label for="proportion" class="mb-2 text-sm font-semibold">模型比例</label>
+                    <select id="proportion" class="w-full rounded-md">
+                        <option value="正常比例" selected>正常比例</option>
+                        <option value="健壯">健壯</option>
+                        <option value="纖細">纖細</option>
+                        <option value="肌肉發達">肌肉發達</option>
+                        <option value="稚嫩">稚嫩</option>
+                        <option value="成熟">成熟</option>
+                        <option value="卡通化">卡通化</option>
+                        <option value="SD比例 (二頭身)">SD比例 (二頭身)</option>
+                        <option value="1/6 比例模型">1/6 比例模型</option>
+                        <option value="1/7 比例模型">1/7 比例模型</option>
+                        <option value="1/8 比例模型">1/8 比例模型</option>
+                        <option value="1/12 比例模型">1/12 比例模型</option>
+                    </select>
+                </div>
+                <div class="flex flex-col mb-4">
+                    <label for="renderStyle" class="mb-2 text-sm font-semibold">渲染樣式</label>
+                    <select id="renderStyle" class="w-full rounded-md">
+                        <option value="完全渲染" selected>完全渲染 (Fully Rendered)</option>
+                        <option value="線框模式">線框模式 (Wireframe)</option>
+                        <option value="灰模模式">灰模模式 (Clay Render)</option>
+                    </select>
+                </div>
+                <div class="flex flex-col">
+                    <label for="material" class="mb-2 text-sm font-semibold">模型材質</label>
+                    <select id="material" class="w-full rounded-md">
+                        <optgroup label="塑膠">
+                            <option value="PVC 塑膠質感" selected>PVC 塑膠</option>
+                            <option value="ABS 塑膠">ABS 塑膠</option>
+                            <option value="樹脂">樹脂</option>
+                            <option value="壓克力">壓克力</option>
+                            <option value="軟膠">軟膠</option>
+                        </optgroup>
+                        <optgroup label="金屬">
+                            <option value="不鏽鋼質感">不鏽鋼</option>
+                            <option value="鋁製質感">鋁製</option>
+                            <option value="青銅質感">青銅</option>
+                            <option value="鍍鉻質感">鍍鉻</option>
+                            <option value="黃金質感">黃金</option>
+                        </optgroup>
+                        <optgroup label="天然">
+                            <option value="木頭質感">木頭</option>
+                            <option value="石頭質感">石頭</option>
+                            <option value="陶瓷質感">陶瓷</option>
+                            <option value="毛絨玩具質感">毛絨玩具</option>
+                            <option value="黏土質感">黏土</option>
+                        </optgroup>
+                        <optgroup label="其他">
+                            <option value="玻璃質感">玻璃</option>
+                            <option value="水晶質感">水晶</option>
+                            <option value="冰塊質感">冰塊</option>
+                            <option value="流體">流體</option>
+                            <option value="光影">光影</option>
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 右上：場景與細節 -->
+            <div id="sceneDetailsCard" class="category-card">
+                <div class="text-xl font-bold mb-4">場景與細節</div>
+                <div class="flex flex-col mb-4">
+                    <label for="stand" class="mb-2 text-sm font-semibold">展台樣式</label>
+                    <select id="stand" class="w-full rounded-md">
+                        <option value="簡潔木質" selected>簡潔木質</option>
+                        <option value="金屬科幻">金屬科幻</option>
+                        <option value="石頭質感">石頭質感</option>
+                        <option value="魔法陣">魔法陣</option>
+                        <option value="懸浮">懸浮</option>
+                        <option value="熔岩">熔岩</option>
+                        <option value="飄浮島嶼">飄浮島嶼</option>
+                        <option value="水面">水面</option>
+                        <option value="透明玻璃">透明玻璃</option>
+                        <option value="透明壓克力">透明壓克力</option>
+                    </select>
+                </div>
+                <div class="flex flex-col mb-4">
+                    <label for="background" class="mb-2 text-sm font-semibold">背景</label>
+                    <select id="background" class="w-full rounded-md">
+                        <option value="白色背景" selected>白色背景</option>
+                        <option value="城市景觀">城市景觀</option>
+                        <option value="森林">森林</option>
+                        <option value="太空">太空</option>
+                        <option value="海灘">海灘</option>
+                        <option value="日式庭院">日式庭院</option>
+                        <option value="未來城市">未來城市</option>
+                        <option value="星空">星空</option>
+                        <option value="沙漠">沙漠</option>
+                        <option value="雪景">雪景</option>
+                    </select>
+                </div>
+                <div class="flex flex-col mb-4">
+                    <label for="angle" class="mb-2 text-sm font-semibold">角度</label>
+                    <select id="angle" class="w-full rounded-md">
+                        <option value="正面" selected>正面</option>
+                        <option value="側面">側面</option>
+                        <option value="俯視">俯視</option>
+                        <option value="仰視">仰視</option>
+                        <option value="近景">近景</option>
+                        <option value="特寫">特寫</option>
+                        <option value="全身">全身</option>
+                        <option value="廣角">廣角</option>
+                    </select>
+                </div>
+                <div class="flex flex-col mb-4">
+                    <label for="lighting" class="mb-2 text-sm font-semibold">燈光</label>
+                    <select id="lighting" class="w-full rounded-md">
+                        <option value="無" selected>無</option>
+                        <option value="專業棚拍燈光">專業棚拍燈光</option>
+                        <option value="自然光">自然光</option>
+                        <option value="室內燈光">室內燈光</option>
+                        <option value="柔和打光">柔和打光</option>
+                        <option value="逆光剪影">逆光剪影</option>
+                    </select>
+                </div>
+                <div class="flex flex-col">
+                    <label for="sceneObjects" class="mb-2 text-sm font-semibold">場景物件</label>
+                    <select id="sceneObjects" class="w-full rounded-md">
+                        <option value="無" selected>無</option>
+                        <option value="iMac 電腦桌">iMac 電腦桌</option>
+                        <option value="白色 Apple 鍵盤">白色 Apple 鍵盤</option>
+                        <option value="模型包裝盒">模型包裝盒</option>
+                        <option value="模型包裝盒 (開啟)">模型包裝盒 (開啟)</option>
+                        <option value="模型工具">模型工具</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 左下：動作設定 -->
+            <div id="actionCard" class="category-card">
+                <div class="text-xl font-bold mb-4">動作設定</div>
+                <div class="flex flex-col mb-4">
+                    <label for="pose" class="mb-2 text-sm font-semibold">動作姿勢</label>
+                    <select id="pose" class="w-full rounded-md">
+                        <option value="站立" selected>站立</option>
+                        <option value="坐姿">坐姿</option>
+                        <option value="跳躍">跳躍</option>
+                        <option value="奔跑">奔跑</option>
+                        <option value="飛行">飛行</option>
+                        <option value="JOJO立">JOJO立</option>
+                        <option value="戰鬥姿態">戰鬥姿態</option>
+                        <option value="優雅跳舞">優雅跳舞</option>
+                        <option value="沉思">沉思</option>
+                        <option value="閱讀">閱讀</option>
+                        <option value="跪姿">跪姿</option>
+                    </select>
+                </div>
+                <div class="flex flex-col mb-4">
+                    <label for="handPose" class="mb-2 text-sm font-semibold">手部動作</label>
+                    <select id="handPose" class="w-full rounded-md">
+                        <option value="無" selected>無</option>
+                        <option value="握拳">握拳</option>
+                        <option value="比讚">比讚</option>
+                        <option value="敬禮">敬禮</option>
+                        <option value="揮手">揮手</option>
+                        <option value="比V">比V</option>
+                        <option value="插口袋">插口袋</option>
+                        <option value="放背後">放背後</option>
+                        <option value="雙手大愛心">雙手大愛心</option>
+                        <option value="單手小愛心">單手小愛心</option>
+                        <option value="托臉頰">托臉頰</option>
+                        <option value="胸前交叉">胸前交叉</option>
+                        <option value="指著前方">指著前方</option>
+                        <option value="手持物件 (劍/書)">手持物件 (劍/書)</option>
+                    </select>
+                </div>
+                <div class="flex flex-col">
+                    <label for="faceExpression" class="mb-2 text-sm font-semibold">臉部表情</label>
+                    <select id="faceExpression" class="w-full rounded-md">
+                        <option value="無" selected>無</option>
+                        <option value="開心">開心</option>
+                        <option value="難過">難過</option>
+                        <option value="生氣">生氣</option>
+                        <option value="驚訝">驚訝</option>
+                        <option value="害羞">害羞</option>
+                        <option value="自信">自信</option>
+                        <option value="冷漠">冷漠</option>
+                        <option value="疲憊">疲憊</option>
+                        <option value="困惑">困惑</option>
+                        <option value="調皮的眨眼">調皮的眨眼</option>
+                        <option value="哭泣">哭泣</option>
+                        <option value="狂笑">狂笑</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 右下：服裝與配件 -->
+            <div id="clothingCard" class="category-card">
+                <div class="text-xl font-bold mb-4">服裝與配件</div>
+                <div class="flex flex-col mb-4">
+                    <label for="upperwear" class="mb-2 text-sm font-semibold">上半身服裝</label>
+                    <select id="upperwear" class="w-full rounded-md">
+                        <optgroup label="日常">
+                            <option value="T恤" selected>T恤</option>
+                            <option value="襯衫">襯衫</option>
+                            <option value="連帽衫">連帽衫</option>
+                            <option value="無袖背心">無袖背心</option>
+                            <option value="西裝外套">西裝外套</option>
+                            <option value="毛衣">毛衣</option>
+                            <option value="運動外套">運動外套</option>
+                        </optgroup>
+                        <optgroup label="幻想與特殊">
+                            <option value="魔法長袍">魔法長袍</option>
+                            <option value="盔甲">盔甲</option>
+                            <option value="神聖盔甲">神聖盔甲</option>
+                            <option value="未來戰鬥服">未來戰鬥服</option>
+                            <option value="禮服">禮服</option>
+                            <option value="和服">和服</option>
+                            <option value="泳裝">泳裝</option>
+                            <option value="連衣裙">連衣裙</option>
+                            <option value="斗篷">斗篷</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="flex flex-col mb-4">
+                    <label for="lowerwear" class="mb-2 text-sm font-semibold">下半身服裝</label>
+                    <select id="lowerwear" class="w-full rounded-md">
+                        <optgroup label="日常">
+                            <option value="牛仔褲" selected>牛仔褲</option>
+                            <option value="短裙">短裙</option>
+                            <option value="長褲">長褲</option>
+                            <option value="運動褲">運動褲</option>
+                            <option value="迷你裙">迷你裙</option>
+                            <option value="短褲">短褲</option>
+                            <option value="西裝褲">西裝褲</option>
+                            <option value="緊身褲">緊身褲</option>
+                        </optgroup>
+                        <optgroup label="幻想與特殊">
+                            <option value="戰裙">戰裙</option>
+                            <option value="長禮服">長禮服</option>
+                            <option value="戰鬥褲">戰鬥褲</option>
+                            <option value="魔女長裙">魔女長裙</option>
+                            <option value="機械義肢褲">機械義肢褲</option>
+                            <option value="未來緊身褲">未來緊身褲</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="flex flex-col mb-4">
+                    <label for="shoes" class="mb-2 text-sm font-semibold">鞋子</label>
+                    <select id="shoes" class="w-full rounded-md">
+                        <optgroup label="日常">
+                            <option value="運動鞋" selected>運動鞋</option>
+                            <option value="皮靴">皮靴</option>
+                            <option value="高跟鞋">高跟鞋</option>
+                            <option value="涼鞋">涼鞋</option>
+                            <option value="赤腳">赤腳</option>
+                            <option value="拖鞋">拖鞋</option>
+                            <option value="芭蕾舞鞋">芭蕾舞鞋</option>
+                            <option value="羅馬涼鞋">羅馬涼鞋</option>
+                        </optgroup>
+                        <optgroup label="幻想與特殊">
+                            <option value="長靴">長靴</option>
+                            <option value="戰鬥靴">戰鬥靴</option>
+                            <option value="魔女尖頭靴">魔女尖頭靴</option>
+                            <option value="未來主義靴">未來主義靴</option>
+                            <option value="飛行靴">飛行靴</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="flex flex-col mb-4">
+                    <label for="socks" class="mb-2 text-sm font-semibold">襪子</label>
+                    <select id="socks" class="w-full rounded-md">
+                        <optgroup label="日常">
+                            <option value="無" selected>無</option>
+                            <option value="短襪">短襪</option>
+                            <option value="中筒襪">中筒襪</option>
+                            <option value="膝上襪">膝上襪</option>
+                            <option value="絲襪">絲襪</option>
+                            <option value="過膝襪">過膝襪</option>
+                        </optgroup>
+                        <optgroup label="幻想與特殊">
+                            <option value="網襪">網襪</option>
+                            <option value="漁網襪">漁網襪</option>
+                            <option value="未來感緊身襪">未來感緊身襪</option>
+                            <option value="魔女長襪">魔女長襪</option>
+                            <option value="金屬絲襪">金屬絲襪</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="flex flex-col">
+                    <label for="accessories" class="mb-2 text-sm font-semibold">配件首飾</label>
+                    <select id="accessories" class="w-full rounded-md">
+                        <optgroup label="日常">
+                            <option value="無" selected>無</option>
+                            <option value="眼鏡">眼鏡</option>
+                            <option value="項鍊">項鍊</option>
+                            <option value="帽子">帽子</option>
+                            <option value="手錶">手錶</option>
+                            <option value="耳環">耳環</option>
+                            <option value="耳機">耳機</option>
+                            <option value="背包">背包</option>
+                            <option value="圍巾">圍巾</option>
+                            <option value="手套">手套</option>
+                        </optgroup>
+                        <optgroup label="幻想與特殊">
+                            <option value="皇冠">皇冠</option>
+                            <option value="魔法杖">魔法杖</option>
+                            <option value="翅膀">翅膀</option>
+                            <option value="機械臂">機械臂</option>
+                            <option value="發光光環">發光光環</option>
+                            <option value="刀劍">刀劍</option>
+                            <option value="盾牌">盾牌</option>
+                            <option value="光劍">光劍</option>
+                            <option value="護目鏡">護目鏡</option>
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 提示詞生成與複製區域 -->
+        <div class="w-full mt-6 p-6 rounded-xl bg-[#161b22] border border-[#30363d]">
+            <div class="flex items-center space-x-2 mb-4">
+                <input type="checkbox" id="hasPhoto" class="rounded-md">
+                <label for="hasPhoto" class="text-sm font-semibold text-gray-400">我有上傳參照照片</label>
+            </div>
+            
+            <div class="flex flex-col mb-4">
+                <label for="customPrompt" class="mb-2 text-sm font-semibold">自訂提示詞 (選填)</label>
+                <textarea id="customPrompt" rows="2" class="w-full p-4 text-sm rounded-md resize-none" placeholder="輸入您想加入的額外細節..."></textarea>
+            </div>
+
+            <button id="generateBtn" class="w-full rounded-lg mb-4 py-3 text-lg font-extrabold">生成提示詞</button>
+            
+            <div class="flex flex-col space-y-4">
+                <textarea id="promptText" rows="5" class="w-full p-4 text-sm rounded-md resize-none" placeholder="生成的提示詞將會顯示在這裡..."></textarea>
+                <button id="copyBtn" class="w-full rounded-lg">複製</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 獲取所有 DOM 元素
+        const generateBtn = document.getElementById('generateBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const promptText = document.getElementById('promptText');
+        const styleSelect = document.getElementById('style');
+        const styleDescription = document.getElementById('style-description');
+
+        // 定義風格說明的物件
+        const styleDescriptions = {
+            '動漫風': '誇張的眼睛與獨特髮型，呈現生動且富有情感的日式動畫風格。',
+            '寫實風': '注重光影、細節和真實比例，讓模型看起來像真實世界中的人偶。',
+            '奇幻風': '結合魔法、神話與幻想元素，創造出非現實的華麗角色造型。',
+            '科幻風': '融入未來科技、機械與金屬質感，呈現充滿未來感和酷炫的視覺效果。',
+            '蒸汽龐克風': '融合維多利亞時代的優雅與工業革命的機械美學，充滿齒輪、蒸汽與黃銅質感。',
+            '賽博龐克風': '以高科技、反烏托邦未來為背景，充滿霓虹燈、電子義肢與網路駭客元素。',
+            '水彩畫風': '具有水彩筆觸的渲染效果，色彩柔和、邊緣模糊，充滿藝術感。',
+            'Q版': '採用大頭小身、圓潤的誇張比例，強調可愛與童趣的風格。',
+            '黏土人風': '強調簡化可愛的特徵，臉部可替換，身體可動，像是實體黏土人偶。'
+        };
+
+        // 根據選中的風格選項更新說明文字
+        styleSelect.addEventListener('change', () => {
+            const selectedStyle = styleSelect.value;
+            styleDescription.textContent = styleDescriptions[selectedStyle] || '';
+        });
+
+        // 監聽生成按鈕的點擊事件
+        generateBtn.addEventListener('click', () => {
+            // 獲取所有選單的值
+            const style = document.getElementById('style').value;
+            const pose = document.getElementById('pose').value;
+            const proportion = document.getElementById('proportion').value;
+            const material = document.getElementById('material').value;
+            const upperwear = document.getElementById('upperwear').value;
+            const lowerwear = document.getElementById('lowerwear').value;
+            const shoes = document.getElementById('shoes').value;
+            const socks = document.getElementById('socks').value;
+            const accessories = document.getElementById('accessories').value;
+            const handPose = document.getElementById('handPose').value;
+            const faceExpression = document.getElementById('faceExpression').value;
+            const stand = document.getElementById('stand').value;
+            const angle = document.getElementById('angle').value;
+            const background = document.getElementById('background').value;
+            const renderStyle = document.getElementById('renderStyle').value;
+            const lighting = document.getElementById('lighting').value;
+            const sceneObjects = document.getElementById('sceneObjects').value;
+            const customPrompt = document.getElementById('customPrompt').value.trim();
+            const hasPhoto = document.getElementById('hasPhoto').checked;
+
+            // 根據是否有參照照片來決定提示詞開頭
+            let prompt = '';
+            if (hasPhoto) {
+                prompt += '根據上傳的照片生成, ';
+            }
+
+            // 組合提示詞
+            prompt += `一個高品質的 3D 人物模型, `;
+            if (proportion !== '正常比例') {
+                prompt += `${proportion}, `;
+            }
+            if (renderStyle !== '完全渲染') {
+                prompt += `渲染樣式: ${renderStyle}, `;
+            } else {
+                prompt += `完全渲染, `;
+            }
+            
+            prompt += `風格: ${style}, 材質: ${material}, `;
+            prompt += `動作: ${pose}, `;
+
+            if (handPose !== '無') {
+                prompt += `手部動作: ${handPose}, `;
+            }
+            if (faceExpression !== '無') {
+                prompt += `臉部表情: ${faceExpression}, `;
+            }
+            
+            prompt += `上半身穿著: ${upperwear}, 下半身穿著: ${lowerwear}, 鞋子: ${shoes}, `;
+            
+            if (socks !== '無') {
+                prompt += `襪子: ${socks}, `;
+            }
+            if (accessories !== '無') {
+                prompt += `配件: ${accessories}, `;
+            }
+
+            if (lighting !== '無') {
+                prompt += `燈光: ${lighting}, `;
+            }
+
+            if (sceneObjects !== '無') {
+                prompt += `場景物件: ${sceneObjects}, `;
+            }
+
+            prompt += `站在一個 ${stand} 的展台上. 視角: ${angle}, 背景: ${background}.`;
+
+            if (customPrompt) {
+                prompt += ` 額外細節: ${customPrompt}.`;
+            }
+
+            // 將提示詞顯示在文本框中
+            promptText.value = prompt;
+        });
+
+        // 監聽複製按鈕的點擊事件
+        copyBtn.addEventListener('click', () => {
+            // 選擇文本框中的所有內容
+            promptText.select();
+            
+            // 嘗試使用 document.execCommand('copy') 複製文本
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    // 暫時更改按鈕文字和狀態
+                    const originalText = copyBtn.textContent;
+                    copyBtn.textContent = '已複製！';
+                    copyBtn.disabled = true;
+                    setTimeout(() => {
+                        copyBtn.textContent = originalText;
+                        copyBtn.disabled = false;
+                    }, 1500);
+                }
+            } catch (err) {
+                console.error('無法複製文本到剪貼簿:', err);
+            }
+        });
+
+        // 頁面載入時，初始化顯示第一個風格的說明
+        window.onload = () => {
+            styleDescription.textContent = styleDescriptions[styleSelect.value];
+        };
+    </script>
+</body>
+</html>
