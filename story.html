@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>故事骰子提示詞生成器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f0f4f8;
+            color: #334155;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .container {
+            background: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            max-width: 960px;
+            width: 100%;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        .results-section {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        @media (min-width: 1024px) {
+            .results-section {
+                flex-direction: row;
+            }
+        }
+        .results-box {
+            flex: 1;
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            opacity: 0.7;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .results-box:hover .copy-btn {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8 flex justify-center items-start min-h-screen">
+
+    <div class="container space-y-8">
+        <h1 class="text-4xl font-bold text-center text-gray-800">故事骰子提示詞生成器</h1>
+        <p class="text-center text-lg text-gray-600">選擇一個故事主題風格，即可同時產生中、英文的完整圖像提示詞。</p>
+        
+        <div class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+            <!-- 故事風格下拉式選單 -->
+            <select id="storyStyle" class="w-full sm:w-auto p-3 rounded-xl border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                <option value="奇幻">奇幻 (Fantasy)</option>
+                <option value="科幻">科幻 (Sci-Fi)</option>
+                <option value="武俠">武俠 (Wuxia)</option>
+                <option value="現代">現代 (Modern)</option>
+                <option value="歷史">歷史 (Historical)</option>
+                <option value="神秘">神秘 (Mysterious)</option>
+                <option value="蒸氣龐克">蒸氣龐克 (Steampunk)</option>
+                <option value="賽博龐克">賽博龐克 (Cyberpunk)</option>
+                <option value="末日">末日 (Apocalyptic)</option>
+                <option value="廢土">廢土 (Post-Apocalyptic)</option>
+                <option value="哥德">哥德 (Gothic)</option>
+                <option value="童話">童話 (Fairy Tale)</option>
+                <option value="偵探">偵探 (Detective)</option>
+                <option value="恐怖">恐怖 (Horror)</option>
+                <option value="校園">校園 (School Life)</option>
+                <option value="浪漫">浪漫 (Romance)</option>
+                <!-- 小學生風格選項 -->
+                <option value="動物冒險">動物冒險 (Animal Adventure)</option>
+                <option value="超級英雄">超級英雄 (Superhero)</option>
+                <option value="恐龍世界">恐龍世界 (Dinosaur World)</option>
+                <option value="太空探險">太空探險 (Space Exploration)</option>
+                <option value="海底探險">海底探險 (Underwater Adventure)</option>
+                <option value="日常生活">日常生活 (Daily Life)</option>
+            </select>
+            
+            <!-- 生成按鈕 -->
+            <button id="generateBtn" class="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition-colors duration-300">
+                <span id="btnText">產生提示詞</span>
+            </button>
+        </div>
+        
+        <!-- 提示詞顯示區域 -->
+        <div class="results-section">
+            <!-- 中文提示詞 -->
+            <div class="results-box">
+                <label for="outputPrompt-zh" class="block text-xl font-bold mb-2">中文提示詞</label>
+                <textarea id="outputPrompt-zh" rows="15" class="w-full p-4 rounded-xl border border-gray-300 bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" readonly placeholder="生成結果將顯示在這裡..."></textarea>
+                <button id="copy-btn-zh" class="copy-btn p-2 bg-gray-200 text-gray-600 rounded-full hover:bg-gray-300 hover:text-blue-600 transition-colors">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+            <!-- 英文提示詞 -->
+            <div class="results-box">
+                <label for="outputPrompt-en" class="block text-xl font-bold mb-2">English Prompt</label>
+                <textarea id="outputPrompt-en" rows="15" class="w-full p-4 rounded-xl border border-gray-300 bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" readonly placeholder="Generated results will appear here..."></textarea>
+                <button id="copy-btn-en" class="copy-btn p-2 bg-gray-200 text-gray-600 rounded-full hover:bg-gray-300 hover:text-blue-600 transition-colors">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- 訊息彈窗 -->
+        <div id="messageBox" class="hidden fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 p-4">
+            <div class="bg-white p-6 rounded-2xl shadow-xl text-center max-w-sm w-full">
+                <p id="messageText" class="text-gray-800 font-semibold mb-4 text-lg"></p>
+                <button id="messageCloseBtn" class="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors">確認</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // 顯示訊息彈窗
+        function showMessage(text) {
+            document.getElementById('messageText').textContent = text;
+            document.getElementById('messageBox').classList.remove('hidden');
+        }
+
+        // 關閉訊息彈窗
+        document.getElementById('messageCloseBtn').addEventListener('click', () => {
+            document.getElementById('messageBox').classList.add('hidden');
+        });
+
+        // 剪貼簿複製功能
+        function setupCopyButton(btnId, outputId) {
+            document.getElementById(btnId).addEventListener('click', () => {
+                const outputText = document.getElementById(outputId);
+                if (outputText.value) {
+                    outputText.select();
+                    try {
+                        document.execCommand('copy');
+                        showMessage('提示詞已複製！');
+                    } catch (err) {
+                        showMessage('複製失敗，請手動複製。');
+                    }
+                }
+            });
+        }
+
+        setupCopyButton('copy-btn-zh', 'outputPrompt-zh');
+        setupCopyButton('copy-btn-en', 'outputPrompt-en');
+
+        document.getElementById('generateBtn').addEventListener('click', async () => {
+            const storyStyle = document.getElementById('storyStyle').value;
+            const outputPromptZh = document.getElementById('outputPrompt-zh');
+            const outputPromptEn = document.getElementById('outputPrompt-en');
+            const generateBtn = document.getElementById('generateBtn');
+            const btnText = document.getElementById('btnText');
+
+            // 顯示載入狀態
+            btnText.innerHTML = `<i class="fas fa-spinner animate-spin mr-2"></i>生成中...`;
+            generateBtn.disabled = true;
+            outputPromptZh.value = ''; 
+            outputPromptEn.value = '';
+
+            // 中文提示詞
+            const userPromptZh = `
+                請生成一個繁體中文的圖像提示詞，用於創建一張包含30個圖案的圖片。
+                請直接輸出提示詞，無需任何額外說明。
+
+                圖像風格和佈局要求：
+                - 一個 6x5 的網格拼貼圖（6列，5行）。
+                - 每個小圖案獨立置於一個格子中，不可缺少。
+                - 每個小圖案尺寸統一，像是一張貼紙圖鑑。
+                - 整個圖像背景為純白色。
+                - 圖案風格：簡潔、彩色、僅表現核心主題、無複雜細節。
+                - 每個圖案都帶有粗厚的圓角邊框，並置於純白色背景。
+
+                內容配置（主題為「${storyStyle}」）：
+                - 第一行：6個${storyStyle}人物圖案。
+                - 第二行：6個${storyStyle}事件圖案。
+                - 第三行：6個${storyStyle}時間概念圖案。
+                - 第四行：6個${storyStyle}地點圖案。
+                - 第五行：6個${storyStyle}物品圖案。
+            `;
+
+            // 英文提示詞
+            const userPromptEn = `
+                Generate an image prompt in English to create a picture containing 30 icons.
+                Output only the prompt, no extra text or explanations.
+
+                Image style and layout requirements:
+                - A 6x5 grid collage (6 columns, 5 rows).
+                - Each small icon is a separate item in its own cell, and no icons should be missing.
+                - All icons are of uniform size, resembling a sticker sheet.
+                - The entire image background is pure white.
+                - Icon style: Simple, colorful, showing only the core theme, without complex details.
+                - Each icon should have a thick, rounded border and be placed on a pure white background.
+
+                Content arrangement (theme is "${storyStyle}"):
+                - First row: 6 icons of ${storyStyle} people.
+                - Second row: 6 icons of ${storyStyle} events.
+                - Third row: 6 icons of ${storyStyle} time concepts.
+                - Fourth row: 6 icons of ${storyStyle} places.
+                - Fifth row: 6 icons of ${storyStyle} objects.
+            `;
+            
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            try {
+                const [responseZh, responseEn] = await Promise.all([
+                    fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: userPromptZh }] }] })
+                    }),
+                    fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: userPromptEn }] }] })
+                    })
+                ]);
+
+                const [resultZh, resultEn] = await Promise.all([
+                    responseZh.json(),
+                    responseEn.json()
+                ]);
+
+                const generatedTextZh = resultZh?.candidates?.[0]?.content?.parts?.[0]?.text;
+                const generatedTextEn = resultEn?.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (generatedTextZh) {
+                    outputPromptZh.value = generatedTextZh;
+                } else {
+                    outputPromptZh.value = "無法生成中文提示詞，請稍後再試。";
+                }
+                
+                if (generatedTextEn) {
+                    outputPromptEn.value = generatedTextEn;
+                } else {
+                    outputPromptEn.value = "Unable to generate English prompt. Please try again later.";
+                }
+
+            } catch (error) {
+                console.error('生成提示詞時發生錯誤:', error);
+                showMessage("發生錯誤，無法產生提示詞。");
+            } finally {
+                // 恢復按鈕狀態
+                btnText.textContent = '產生提示詞';
+                generateBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
