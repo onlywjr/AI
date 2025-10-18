@@ -634,7 +634,7 @@
                     steps.push(`${remaining} - ${weight} = ${remaining - weight}`);
                     remaining -= weight;
                 } else {
-                    explanation += `<li>第 ${i+1} 條線（能量值 <strong>${weight}</strong>）：超過剩餘能量，無法使用，剪斷（0）。</li>`;
+                    explanation += `<li>第 ${i+1} 條線（能量值 <strong>${weight}</strong>）：<br />超過剩餘能量，無法使用，剪斷（0）。</li>`;
                 }
             }
             
@@ -642,7 +642,7 @@
             steps.forEach(step => {
                 explanation += `<li>${step}</li>`;
             });
-            explanation += `</ul><p>這樣就能剛好用完全部能量 <strong>${targetNumber}</strong> 阻止炸彈爆炸！</p>`;
+            explanation += `</ul><p>這樣就能剛好用完全部能量 <strong>${targetNumber}</strong> ，成功阻止炸彈爆炸！</p>`;
             return explanation;
         }
         
