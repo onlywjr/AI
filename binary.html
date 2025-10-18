@@ -1,234 +1,264 @@
+```html
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>【天啟核心】緊急代碼輸入協議</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 引入 Tone.js 函式庫用於音效管理 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
-    <style>
-        /* 自定義樣式以呈現核心控制台的質感 */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0d0d1a; /* 更深的背景色 */
-            color: #e5e7eb; /* 淺灰色文字 */
-            min-height: 100vh;
-        }
-        .bomb-casing {
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.1);
-            border: 5px solid #4a4a66;
-            background: #1f1f3a; /* 控制台面板顏色 */
-        }
-        .wire {
-            transition: all 0.1s ease-in-out;
-            user-select: none;
-            position: absolute;
-            bottom: 0;
-            width: 100%; /* 佔滿父容器的寬度 */
-        }
-                /* 可操作線路 */
-        .wire.active {
-            cursor: pointer;
-        }
-        .timer-display {
-            font-family: monospace;
-            text-shadow: 0 0 5px #ffeb3b;
-        }
-                .defuse-button {
-            transition: background-color 0.2s, transform 0.1s;
-            box-shadow: 0 4px #047857; /* 綠色陰影 */
-        }
-        .defuse-button:active {
-            box-shadow: 0 0 #047857;
-            transform: translateY(4px);
-        }
-        /* 固定 3 欄佈局，適用於所有螢幕 */
-        #wire-grid {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center; /* 讓整體居中 */
-            gap: 0.5rem; /* 確保行間距 */
-        }
-                /* 每個位元組 (bit-group) 佔 1/3 寬度，確保 3 欄對齊 */
-        .bit-group {
-            /* 計算出 3 欄時每個元素能佔的寬度，減去間隙以防止溢出 */
-            width: calc(33.333% - 0.75rem);
-            min-width: 80px;
-            box-sizing: border-box;
-            margin-bottom: 0.5rem;
-        }
-                /* 驗證動畫效果：綠燈閃爍 (答對) */
-        @keyframes pulse-green {
-            0%, 100% { box-shadow: 0 0 1px #10b981; border-color: #10b981; }
-            50% { box-shadow: 0 0 10px 3px #10b981; border-color: #10b981; }
-        }
-        .pulse-green {
-            animation: pulse-green 0.3s ease-in-out;
-        }
-        /* 驗證動畫效果：紅燈閃爍 (答錯/爆炸前) */
-        @keyframes pulse-red {
-            0%, 100% { box-shadow: 0 0 1px #ef4444; border-color: #ef4444; }
-            50% { box-shadow: 0 0 15px 5px #ef4444; border-color: #ef4444; }
-        }
-        .pulse-red {
-            animation: pulse-red 0.3s ease-in-out;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【天啟核心】緊急代碼輸入協議：二進位拆彈遊戲</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        /* Custom animations */
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 10px rgba(0, 255, 0, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(0, 255, 0, 1); }
+            100% { box-shadow: 0 0 10px rgba(0, 255, 0, 0.5); }
+        }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 10px rgba(255, 0, 0, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(255, 0, 0, 1); }
+            100% { box-shadow: 0 0 10px rgba(255, 0, 0, 0.5); }
+        }
+        .pulse-green { animation: pulse-green 0.5s; }
+        .pulse-red { animation: pulse-red 0.5s; }
+        .wire-intact { border-top: 4px solid; }
+        .wire-cut { border-top: 4px dashed; height: 50%; }
+        .shadow-warning-low { text-shadow: 0 0 5px yellow; }
+        .shadow-warning-high { text-shadow: 0 0 10px red; }
+    </style>
 </head>
-<body class="p-4 flex flex-col items-center justify-center">
-    <div id="game-container" class="w-full max-w-xl p-6 rounded-xl bomb-casing">
-        <h1 class="text-3xl font-bold text-center text-red-400 mb-4">【天啟核心】緊急代碼輸入協議</h1>
-
-                <!-- 故事背景 (已擴充至 >300字，並替換時間描述) -->
-        <div class="p-3 mb-4 rounded-lg bg-gray-700 bg-opacity-50 text-sm text-gray-200 border border-gray-600">
-            <h3 class="font-bold text-yellow-300 mb-2">任務簡報：方舟城市核心緊急代碼協議</h3>
-            <p class="mb-2">
-                <strong>背景：</strong> 在「方舟城市」的深層結構中，維護城市運作的超級智能中樞「巴比倫之塔」正面臨毀滅性的「太陽閃焰衝擊」。該衝擊已觸發了核心的自我保護機制——一個計時炸彈般的緊急關機協議。這套協議正在倒數計時，一旦計時歸零，核心將執行不可逆的關閉程序，導致方舟內數百萬人口賴以生存的生命維持系統、供電、通訊全部中斷，文明將陷入黑暗。
-            </p>
-            <p class="mb-2">
-                <strong>您的職責：</strong> 您是唯一能接觸到核心實體介面的技術特工。您必須在 **指定時間內**，將主顯示器上不斷變化的 **解鎖編號 (十進位)** 迅速、準確地轉換為核心介面認可的 **二進位指令序列**。每一條線路代表一個位元，從左到右分別對應其特定的十進位權重，這是一場對您二進位轉換速度和精準度的終極考驗！
-            </p>
-            <p>
-                **指令定義：** 錯誤的序列輸入將會立即觸發核心的防禦爆炸。請保持冷靜，準確計算！
-            </p>
-        </div>
-        <!-- 規則與位元權重 (指令格式已調整) -->
-        <div class="p-4 mb-6 rounded-lg bg-red-900 bg-opacity-30 border-2 border-red-600">
-            <h3 class="text-xl font-bold text-red-300 mb-2 text-center">核心解鎖指令序列：</h3>
-            <div class="flex justify-center space-x-6 text-center text-sm">
-                <div>
-                    <span class="text-white font-extrabold text-xl p-1 bg-green-700 rounded-md">1</span>：<br>完整線路
-                    <span class="block text-xs mt-1 text-gray-300">(持續通電)</span>
-                </div>
-                <div>
-                    <span class="text-yellow-400 font-extrabold text-xl p-1 bg-red-700 rounded-md">0</span>：<br>剪斷線路
-                    <span class="block text-xs mt-1 text-gray-300">(安全關閉)</span>
-                </div>
-            </div>
-        </div>
-        <!-- 遊戲面板 -->
-        <div class="p-4 mb-6 rounded-lg bg-gray-800 border-2 border-red-600">
-            <div class="flex justify-between items-center mb-4">
-                <div class="text-xl font-mono timer-display">
-                    倒數計時: <span id="timer-value" class="text-yellow-400 text-3xl">0:00</span>
-                </div>
-                <!-- 調整此處的初始顯示樣式與文字 -->
-                <div class="text-lg font-semibold">
-                    解鎖編號: <span id="target-decimal" class="text-xl md:text-2xl font-bold text-gray-500 ml-2">等待任務啟動...</span>
-                </div>
-            </div>
-            <!-- 線路網格 (固定 3 欄佈局) -->
-            <div id="wire-grid" class="flex justify-center flex-wrap">
-                <!-- 12 條線將在這裡動態生成 (每欄 4 條) -->
-            </div>
-        </div>
-
-        <!-- 控制按鈕 -->
-        <div class="flex justify-center">
-            <button id="defuse-button" class="defuse-button bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl uppercase text-xl" disabled>
-                確認指令序列 (執行)
-            </button>
-        </div>
-
-        <!-- 訊息彈窗 (取代 alert) -->
-        <div id="message-box" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-            <div id="message-content" class="p-8 rounded-xl text-center shadow-2xl w-full max-w-sm">
-                <!-- 訊息內容 -->
-            </div>
-        </div>
-    </div>
-    <!-- 遊戲設定 (出題者模式) -->
-    <div id="setup-panel" class="w-full max-w-xl p-6 mt-6 rounded-xl bg-gray-900 shadow-inner">
-        <h2 class="text-2xl font-bold text-yellow-300 mb-4">任務設置 (主控台)</h2>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-
-                        <!-- 時間選擇 -->
-            <select id="time-select" class="p-3 rounded-lg bg-gray-700 text-white border-none focus:ring-yellow-500 focus:border-yellow-500">
-                <option value="45">時間: 45 秒 (預設)</option>
-                <option value="20">時間: 20 秒 (極限)</option>
-                <option value="30">時間: 30 秒 (困難)</option>
-                <option value="60">時間: 60 秒 (中等)</option>
-                <option value="90">時間: 90 秒 (輕鬆)</option>
-            </select>
-            <!-- 線路數選擇 -->
-            <select id="wire-count-select" class="p-3 rounded-lg bg-gray-700 text-white border-none focus:ring-yellow-500 focus:border-yellow-500">
-                <option value="12">線路: 12 條 (最大 4095)</option>
-                <option value="10">線路: 10 條 (最大 1023)</option>
-                <option value="8">線路: 8 條 (最大 255)</option>
-                <option value="6">線路: 6 條 (最大 63)</option>
-                <option value="4">線路: 4 條 (最大 15)</option>
-            </select>
-
-                        <!-- 十進位輸入 (佔兩欄) -->
-            <input type="number" id="custom-decimal" placeholder="輸入 0-4095 的解鎖編號 (可選)" class="col-span-2 p-3 rounded-lg bg-gray-700 text-white border-none focus:ring-yellow-500 focus:border-yellow-500" min="0" max="4095">
-        </div>
-        <button id="start-game-button" class="mt-3 w-full bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-3 px-6 rounded-lg transition-colors">
-            啟動任務並開始倒數
-        </button>
-        <p class="text-sm text-gray-500 mt-2 text-center">最大值會根據線路數自動調整。若不輸入數字，將隨機產生。</p>
-    </div>
-<script>
-    // 全域變數與配置
-    let initialTime = 45;
-    let timerInterval;
-    let gameActive = false;
-    let targetDecimal = 0;
-    let targetBinary = '';
-    let currentWireCount = 12;
-
-    // 最大 12 位元的權重表
-    const BIT_WEIGHTS = [2048, 1024, 512, 256, 128, 64, 32, 16, 8, 4, 2, 1];
-
-    // 多彩電線顏色 (共 12 種)
-    const WIRE_COLORS = [
-        '#00ff00', '#00ffff', '#ef4444', '#f97316',
-        '#eab308', '#84cc16', '#22c55e', '#06b6d4',
-        '#3b82f6', '#8b5cf6', '#ec4899', '#f43f5e',
-    ];
-    // 玩家解法狀態：1 代表 Intact (完整, 初始值), 0 代表 Cut (剪斷)
-    // 陣列大小固定為 12，只有前 currentWireCount 個有效
-    let playerWireStates = new Array(BIT_WEIGHTS.length).fill(0);
-
-    // DOM 元素
-    const wireGrid = document.getElementById('wire-grid');
-    const timerValueDisplay = document.getElementById('timer-value');
-    const targetDecimalDisplay = document.getElementById('target-decimal');
-    const defuseButton = document.getElementById('defuse-button');
-    const startGameButton = document.getElementById('start-game-button');
-    const customDecimalInput = document.getElementById('custom-decimal');
-    const wireCountSelect = document.getElementById('wire-count-select');
-    const timeSelect = document.getElementById('time-select');
-    const messageBox = document.getElementById('message-box');
-    const messageContent = document.getElementById('message-content');
-
-
-    // --- 音效管理器 (Tone.js) ---
-    const SoundManager = {
-        // 剪線/接回 的撥弦聲
-        wireSynth: new Tone.PluckSynth().toDestination(),
-        // 成功/失敗 的回饋音
-        feedbackSynth: new Tone.Synth({
-            oscillator: { type: 'sine' },
-            envelope: { attack: 0.005, decay: 0.1, sustain: 0, release: 0.1 }
-        }).toDestination(),
-        // 爆炸/嚴重錯誤 的噪音
-        alarmNoise: new Tone.NoiseSynth({
-            noise: { type: 'pink' },
-            envelope: { attack: 0.005, decay: 0.8, sustain: 0, release: 0.8 }
-        }).toDestination(),
-        // 倒數計時警報循環
-        alarmLoop: null,
-
-        // 檢查 Audio Context 是否已啟動
-        isReady: false,
-
-        async init() {
-            // 由於瀏覽器限制，Audio Context 必須由使用者操作來啟動
-            if (!this.isReady && Tone.context.state !== 'running') {
-                await Tone.start();
-                this.isReady = true;
-                console.log("Audio Context Started.");
-            }
-        },
-
+<body class="bg-gray-900 text-gray-200 min-h-screen flex flex-col items-center justify-center p-4">
+    <div id="game-container" class="max-w-4xl w-full bg-gray-800 rounded-lg shadow-2xl p-6 border border-gray-600">
+        <h1 class="text-3xl font-bold text-red-500 mb-4 text-center">【天啟核心】緊急代碼輸入協議：二進位拆彈遊戲</h1>
+        <p class="text-sm mb-6 text-center">在「方舟城市」的深層結構中，維護城市運作的超級智能中樞「巴比倫之塔」正面臨毀滅性的「太陽閃焰衝擊」。您必須在時間內將解鎖編號轉換為二進位指令序列。</p>
+        
+        <!-- Settings -->
+        <div id="settings" class="mb-6">
+            <label class="block mb-2">線路數：</label>
+            <select id="wire-count" class="bg-gray-700 text-white p-2 rounded w-full mb-4">
+                <option value="4">4</option>
+                <option value="6">6</option>
+                <option value="8">8</option>
+                <option value="10">10</option>
+                <option value="12">12</option>
+            </select>
+            <label class="block mb-2">倒數時間 (秒)：</label>
+            <input type="number" id="timer-duration" value="60" min="30" max="300" class="bg-gray-700 text-white p-2 rounded w-full mb-4">
+            <label class="block mb-2">目標號碼 (留空為隨機)：</label>
+            <input type="number" id="target-number" class="bg-gray-700 text-white p-2 rounded w-full mb-4">
+            <button id="start-game" class="bg-red-600 text-white px-4 py-2 rounded w-full hover:bg-red-700">啟動任務</button>
+        </div>
+        
+        <!-- Game Area -->
+        <div id="game-area" class="hidden">
+            <div class="text-center mb-4">
+                <h2 class="text-2xl font-bold">目標解鎖編號：</h2>
+                <span id="target-display" class="text-5xl text-yellow-400 animate-pulse"></span>
+            </div>
+            <div class="text-center mb-4">
+                <h2 class="text-xl">剩餘時間：</h2>
+                <span id="timer-display" class="text-4xl text-white shadow-warning-low"></span>
+            </div>
+            <div id="wire-grid" class="grid grid-cols-3 gap-4 mb-6"></div>
+            <button id="confirm" class="bg-green-600 text-white px-4 py-2 rounded w-full hover:bg-green-700">確認序列</button>
+        </div>
+    </div>
+    
+    <!-- Message Box -->
+    <div id="message-box" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75 hidden">
+        <div class="bg-gray-800 p-6 rounded-lg text-center">
+            <p id="message-text" class="text-2xl mb-4"></p>
+            <button id="close-message" class="bg-blue-600 text-white px-4 py-2 rounded">關閉</button>
+        </div>
+    </div>
+    
+    <script>
+        // Game variables
+        let wireCount = 4;
+        let timerDuration = 60;
+        let targetNumber = 0;
+        let wires = [];
+        let timerInterval;
+        let remainingTime;
+        let bgmLoop;
+        let currentBPM = 60;
+        
+        // Tone.js setup
+        const synth = new Tone.Synth({ oscillator: { type: 'square' } }).toDestination();
+        const metalSynth = new Tone.MetalSynth().toDestination();
+        const polySynth = new Tone.PolySynth().toDestination();
+        const noiseSynth = new Tone.NoiseSynth().toDestination();
+        const membraneSynth = new Tone.MembraneSynth().toDestination();
+        
+        // Start game
+        document.getElementById('start-game').addEventListener('click', async () => {
+            await Tone.start();
+            wireCount = parseInt(document.getElementById('wire-count').value);
+            timerDuration = parseInt(document.getElementById('timer-duration').value);
+            const manualTarget = parseInt(document.getElementById('target-number').value);
+            const maxTarget = Math.pow(2, wireCount) - 1;
+            targetNumber = isNaN(manualTarget) || manualTarget < 0 || manualTarget > maxTarget ? Math.floor(Math.random() * maxTarget) + 1 : manualTarget;
+            
+            document.getElementById('settings').classList.add('hidden');
+            document.getElementById('game-area').classList.remove('hidden');
+            document.getElementById('target-display').textContent = targetNumber;
+            
+            initWires();
+            startTimer();
+            startBGM();
+        });
+        
+        // Initialize wires
+        function initWires() {
+            const grid = document.getElementById('wire-grid');
+            grid.innerHTML = '';
+            wires = [];
+            const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange'];
+            for (let i = 0; i < wireCount; i++) {
+                const wire = document.createElement('div');
+                wire.classList.add('bg-gray-700', 'p-4', 'rounded', 'text-center', 'cursor-pointer', 'wire-intact', 'border-t-' + colors[i % colors.length] + '-500');
+                wire.dataset.state = '1';
+                wire.dataset.index = i;
+                wire.textContent = `位元 ${wireCount - 1 - i} (權重: ${Math.pow(2, wireCount - 1 - i)})`;
+                wire.addEventListener('click', toggleWire);
+                grid.appendChild(wire);
+                wires.push(wire);
+            }
+        }
+        
+        // Toggle wire state
+        function toggleWire(e) {
+            const wire = e.target;
+            if (wire.dataset.state === '1') {
+                wire.dataset.state = '0';
+                wire.classList.remove('wire-intact');
+                wire.classList.add('wire-cut');
+                wire.classList.replace('border-t-', 'border-t-gray-');
+                metalSynth.triggerAttackRelease('C2', '8n');
+            } else {
+                wire.dataset.state = '1';
+                wire.classList.remove('wire-cut');
+                wire.classList.add('wire-intact');
+                const color = wire.textContent.match(/border-t-(\w+)-500/);
+                wire.classList.add('border-t-red-500'); // Default, but should retain original
+                synth.triggerAttackRelease('C4', '8n');
+            }
+        }
+        
+        // Start timer
+        function startTimer() {
+            remainingTime = timerDuration;
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                remainingTime--;
+                updateTimerDisplay();
+                if (remainingTime <= 0) {
+                    clearInterval(timerInterval);
+                    failGame();
+                }
+                updateBPM();
+            }, 1000);
+        }
+        
+        // Update timer display
+        function updateTimerDisplay() {
+            document.getElementById('timer-display').textContent = remainingTime;
+        }
+        
+        // Update BPM and shadow
+        function updateBPM() {
+            let newBPM = 60;
+            let shadowClass = 'shadow-warning-low';
+            if (remainingTime <= 15) {
+                newBPM = 90;
+                shadowClass = 'shadow-warning-high';
+            }
+            if (remainingTime <= 5) newBPM = 120;
+            if (newBPM !== currentBPM) {
+                currentBPM = newBPM;
+                bgmLoop.stop();
+                bgmLoop = new Tone.Loop(time => {
+                    membraneSynth.triggerAttackRelease('C1', '8n', time);
+                }, 60 / currentBPM);
+                bgmLoop.start(0);
+            }
+            const timerEl = document.getElementById('timer-display');
+            timerEl.classList.remove('shadow-warning-low', 'shadow-warning-high');
+            timerEl.classList.add(shadowClass);
+        }
+        
+        // Start BGM
+        function startBGM() {
+            Tone.Transport.start();
+            bgmLoop = new Tone.Loop(time => {
+                membraneSynth.triggerAttackRelease('C1', '8n', time);
+            }, 60 / currentBPM);
+            bgmLoop.start(0);
+        }
+        
+        // Confirm button
+        document.getElementById('confirm').addEventListener('click', () => {
+            clearInterval(timerInterval);
+            bgmLoop.stop();
+            validateWires();
+        });
+        
+        // Validate wires
+        async function validateWires() {
+            let playerValue = 0;
+            for (let i = 0; i < wires.length; i++) {
+                const state = parseInt(wires[i].dataset.state);
+                playerValue += state * Math.pow(2, wireCount - 1 - i);
+            }
+            if (playerValue === targetNumber) {
+                await animateValidation(true);
+                successGame();
+            } else {
+                await animateValidation(false);
+                failGame();
+            }
+        }
+        
+        // Animate validation
+        async function animateValidation(isCorrect) {
+            for (let i = 0; i < wires.length; i++) {
+                const correctState = (targetNumber >> (wireCount - 1 - i)) & 1;
+                const playerState = parseInt(wires[i].dataset.state);
+                const animClass = playerState === correctState ? 'pulse-green' : 'pulse-red';
+                wires[i].classList.add(animClass);
+                await new Promise(resolve => setTimeout(resolve, 500));
+                wires[i].classList.remove(animClass);
+            }
+        }
+        
+        // Success
+        function successGame() {
+            polySynth.triggerAttackRelease(['C4', 'E4', 'G4'], '2n');
+            showMessage('任務成功！核心已穩定。', true);
+        }
+        
+        // Fail
+        function failGame() {
+            noiseSynth.triggerAttackRelease('8n');
+            showMessage('失敗！核心爆炸。', false);
+        }
+        
+        // Show message
+        function showMessage(text, reset) {
+            document.getElementById('message-text').textContent = text;
+            document.getElementById('message-box').classList.remove('hidden');
+            document.getElementById('close-message').addEventListener('click', () => {
+                document.getElementById('message-box').classList.add('hidden');
+                Tone.Transport.stop();
+                if (reset) {
+                    document.getElementById('settings').classList.remove('hidden');
+                    document.getElementById('game-area').classList.add('hidden');
+                } else {
+                    location.reload();
+                }
+            });
+        }
+    </script>
+</body>
+</html>
+```
