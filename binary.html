@@ -95,6 +95,11 @@
             }
             20%, 24%, 55% { text-shadow: none; }
         }
+        @keyframes bomb-pulse {
+            0% { transform: scale(1); text-shadow: 0 0 10px #ff0000; }
+            50% { transform: scale(1.1); text-shadow: 0 0 20px #ff0000; }
+            100% { transform: scale(1); text-shadow: 0 0 10px #ff0000; }
+        }
         .pulse-green { animation: pulse-green 0.5s; }
         .pulse-red { animation: pulse-red 0.5s; }
         .wire { width: 6px; margin: 0 auto; transition: height 0.3s, background-color 0.3s; border-radius: 3px; }
@@ -169,17 +174,14 @@
             opacity: 0.1;
             z-index: -1;
         }
-        .bomb-container::after {
-            content: '☢️';
-            position: absolute;
-            top: -30px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 60px;
-            color: #00ffff;
-            text-shadow: 0 0 20px #00ffff;
-            animation: pulse-red 2s infinite;
-            z-index: -1;
+        .bomb-icon {
+            font-size: 8rem;
+            color: #ff0000;
+            text-shadow: 0 0 20px #ff0000;
+            animation: bomb-pulse 1.5s infinite;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            display: none;
         }
         #countdown {
             font-family: 'Orbitron', sans-serif;
@@ -206,6 +208,7 @@
         }
         @media (max-width: 640px) {
             .wire-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .bomb-icon { font-size: 5rem; }
         }
         body, h1, h2, p, label, button, select, input {
             font-family: 'Orbitron', sans-serif;
@@ -224,11 +227,6 @@
             display: block;
             margin-bottom: 5px;
             transition: transform 0.3s ease-in-out;
-        }
-        .time-section .label {
-            font-size: 1rem;
-            color: #00e6e6;
-            letter-spacing: 2px;
         }
         #countdown {
             display: flex;
@@ -267,13 +265,14 @@
     <div id="explosion-overlay"></div>
     <div id="game-container" class="max-w-4xl w-full bomb-container p-6">
         <h1 class="text-3xl font-bold text-red-500 mb-4 text-center">【末日炸彈】緊急拆彈協議：電線解謎遊戲</h1>
-        <p class="text-sm mb-6 text-justify">
+        <p id="game-description" class="text-sm mb-6 text-justify">
             在遙遠的未來，地球上最後一座堡壘城市「諾亞方舟」正面臨大危機！一群壞蛋偷偷放了一枚超危險的「末日炸彈」，它連接到城市的電力系統和太空衛星，只要炸開，嗶！所有機器都會壞掉，大家會陷入大麻煩！這顆炸彈有個很聰明的鎖，裡面有很多彩色電線，每條線就像一個魔法開關，從左到右有不同的「能量值」。炸彈的螢幕會顯示一個「解鎖數字」，你得把這個數字變成電線的開關組合，決定哪些線要剪斷（關掉，0）或保持完整（開著，1）。剪錯線？砰！炸彈會爆炸！
             <br><br>
-            你是城市裡最厲害的拆彈英雄，現在得趕快行動！炸彈的計時器已經開始滴答響了。你可以先選擇任務難度：選幾條電線（4、6、7、8、10或12條），這會決定謎題有多難；選倒數時間（30、60、90、120或180秒），挑戰你的速度；還可以自己輸入或讓系統隨機給你一個解鎖數字。遊戲開始後，螢幕會閃出目標數字，你要快速點擊電線，切換它們的狀態——完整（1）像條長長的線，剪斷（0）會變短，還會有火花和煙霧！每條線下面有它的「能量值」，就像魔法數字，幫你算出怎麼組合才能對。
+            你是城市裡最厲害的拆彈英雄，現在得趕快行動！炸彈的計時器已經開始滴答響了。你可以先選擇任務難度：選幾條電線（4、6、7、8、10或12條），這會決定謎題有多難；選倒數時間（30、60、90、120或180秒），挑戰你的速度；還可以自己輸入或讓系統隨機給你一個解鎖數字。遊戲開始後，螢幕會閃出目標數字，你要快速點擊電線，選出正確的電線剪斷它們，剪斷（0）的電線會以變短顯示。
             <br><br>
-            當你覺得電線的開關組合對了，按下「拆除炸彈」鍵，計時器會停下來，檢查每條線：對的會閃綠光，錯的閃紅光。如果全對，耶！你救城市了！如果錯了，轟！炸彈會炸開。遊戲有超酷的音效：計時器像心跳聲，剪線有金屬「喀嚓」聲，時間快沒時會更緊張！準備好當英雄了嗎？快來挑戰，救大家！
+            當你覺得你剪的電線組合對了，按下「拆除炸彈」鍵，計時器會停下來，檢查每條線：對的會閃綠光，錯的閃紅光。如果全對，耶！你救城市了！如果錯了，轟！炸彈會炸開。準備好當英雄了嗎？快來挑戰，救大家！
         </p>
+        <div id="bomb-icon" class="bomb-icon">☢️</div>
         
         <!-- Settings -->
         <div id="settings" class="mb-6">
@@ -311,11 +310,9 @@
                 <div id="countdown">
                     <div class="time-section">
                         <span id="minutes" class="time">00</span>
-                        <span class="label">分</span>
                     </div>
                     <div class="time-section">
                         <span id="seconds" class="time">00</span>
-                        <span class="label">秒</span>
                     </div>
                 </div>
             </div>
@@ -402,6 +399,8 @@
             
             document.getElementById('settings').classList.add('hidden');
             document.getElementById('game-area').classList.remove('hidden');
+            document.getElementById('game-description').classList.add('hidden');
+            document.getElementById('bomb-icon').style.display = 'block';
             document.getElementById('target-display').textContent = targetNumber;
             
             initWires();
@@ -674,6 +673,8 @@
                 if (reset) {
                     document.getElementById('settings').classList.remove('hidden');
                     document.getElementById('game-area').classList.add('hidden');
+                    document.getElementById('game-description').classList.remove('hidden');
+                    document.getElementById('bomb-icon').style.display = 'none';
                 } else {
                     location.reload();
                 }
@@ -682,4 +683,3 @@
     </script>
 </body>
 </html>
-```
