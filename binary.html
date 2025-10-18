@@ -630,7 +630,7 @@
                 const weight = weights[i];
                 const bit = binary[i];
                 if (weight <= remaining) {
-                    explanation += `<li>第 ${i+1} 條線（能量值 <strong>${weight}</strong>）：必需使用！保持完整（1），從 <strong>${remaining}</strong> 減掉 <strong>${weight}</strong>，剩下 <strong>${remaining - weight}</strong>。</li>`;
+                    explanation += `<li>第 ${i+1} 條線（能量值 <strong>${weight}</strong>）：<br />必需使用！保持完整（1）。<br />從 <strong>${remaining}</strong> 減掉 <strong>${weight}</strong>，剩下 <strong>${remaining - weight}</strong>。</li>`;
                     steps.push(`${remaining} - ${weight} = ${remaining - weight}`);
                     remaining -= weight;
                 } else {
