@@ -1,0 +1,685 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script>```html
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【末日炸彈】緊急拆彈協議：電線解謎遊戲</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
+    <style>
+        /* Custom animations */
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 10px rgba(0, 255, 0, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(0, 255, 0, 1); }
+            100% { box-shadow: 0 0 10px rgba(0, 255, 0, 0.5); }
+        }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 10px rgba(255, 0, 0, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(255, 0, 0, 1); }
+            100% { box-shadow: 0 0 10px rgba(255, 0, 0, 0.5); }
+        }
+        @keyframes scissors-bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-5px); }
+        }
+        @keyframes cut-flash {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.2); }
+            100% { opacity: 0; transform: scale(1.5); }
+        }
+        @keyframes spark {
+            0% { opacity: 1; transform: translate(0, 0); }
+            100% { opacity: 0; transform: translate(var(--dx), var(--dy)); }
+        }
+        @keyframes smoke {
+            0% { opacity: 0.8; transform: translate(0, 0) scale(1); }
+            100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(2); }
+        }
+        @keyframes scissors-cut {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(20deg); }
+            100% { transform: rotate(0deg); }
+        }
+        @keyframes explosion {
+            0% { background-color: rgba(255, 0, 0, 0); }
+            20% { background-color: rgba(255, 165, 0, 0.8); }
+            40% { background-color: rgba(255, 255, 0, 0.9); }
+            60% { background-color: rgba(255, 0, 0, 0.8); }
+            80% { background-color: rgba(255, 165, 0, 0.9); }
+            100% { background-color: rgba(0, 0, 0, 0); }
+        }
+        @keyframes neon-flicker {
+            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+                text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+            }
+            20%, 24%, 55% { text-shadow: none; }
+        }
+        .pulse-green { animation: pulse-green 0.5s; }
+        .pulse-red { animation: pulse-red 0.5s; }
+        .wire { width: 6px; margin: 0 auto; transition: height 0.3s, background-color 0.3s; border-radius: 3px; }
+        .wire-intact { height: 150px; }
+        .wire-cut { height: 75px; background: linear-gradient(to bottom, currentColor 50%, transparent 50%); background-size: 100% 8px; }
+        .shadow-warning-low { text-shadow: 0 0 5px yellow; }
+        .shadow-warning-high { text-shadow: 0 0 10px red; }
+        .wire-container { position: relative; transition: transform 0.2s; }
+        .wire-container:hover { transform: scale(1.05); cursor: crosshair; }
+        .wire-container:hover::after {
+            content: '✂️';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            pointer-events: none;
+            z-index: 10;
+            animation: scissors-bounce 0.6s infinite;
+        }
+        .cut-effect {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            color: white;
+            pointer-events: none;
+            z-index: 20;
+            animation: cut-flash 0.3s forwards, scissors-cut 0.3s;
+        }
+        .spark {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: yellow;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 20;
+            animation: spark 0.5s forwards linear;
+        }
+        .smoke {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #999;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 20;
+            animation: smoke 0.7s forwards linear;
+        }
+        .state-indicator { position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; line-height: 24px; text-align: center; border-radius: 6px; font-weight: bold; font-size: 14px; }
+        .wire-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+        .number-indicator { display: block; margin-top: 4px; padding: 2px 8px; border-radius: 6px; font-size: 12px; line-height: 20px; text-align: center; }
+        .bomb-container {
+            background: radial-gradient(circle at center, #0a1f44 0%, #000000 100%);
+            border: 4px solid #00ffff;
+            border-radius: 24px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.5), inset 0 0 20px rgba(0, 255, 255, 0.3);
+            position: relative;
+            padding: 20px;
+            overflow: hidden;
+        }
+        .bomb-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" stroke="%2300ffff" stroke-width="2" fill="none"/><line x1="50" y1="10" x2="50" y2="90" stroke="%2300ffff" stroke-width="1"/><line x1="10" y1="50" x2="90" y2="50" stroke="%2300ffff" stroke-width="1"/></svg>') center / 50% no-repeat;
+            opacity: 0.1;
+            z-index: -1;
+        }
+        .bomb-container::after {
+            content: '☢️';
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 60px;
+            color: #00ffff;
+            text-shadow: 0 0 20px #00ffff;
+            animation: pulse-red 2s infinite;
+            z-index: -1;
+        }
+        #countdown {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            color: #00e6e6;
+            text-shadow: 0 0 15px #00ffff, 0 0 30px #00ffff;
+            animation: neon-flicker 1.5s infinite;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        #explosion-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+            pointer-events: none;
+            z-index: 9999;
+            display: none;
+            animation: explosion 2s forwards;
+        }
+        @media (max-width: 640px) {
+            .wire-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        body, h1, h2, p, label, button, select, input {
+            font-family: 'Orbitron', sans-serif;
+        }
+        h1, h2 {
+            color: #00e6e6;
+            text-shadow: 0 0 10px #00e6e6, 0 0 20px #00e6e6;
+        }
+        button {
+            text-shadow: 0 0 5px #ffffff;
+        }
+        .time-section .time {
+            font-size: 3rem;
+            color: #00e6e6;
+            text-shadow: 0 0 15px #00ffff, 0 0 30px #00ffff;
+            display: block;
+            margin-bottom: 5px;
+            transition: transform 0.3s ease-in-out;
+        }
+        .time-section .label {
+            font-size: 1rem;
+            color: #00e6e6;
+            letter-spacing: 2px;
+        }
+        #countdown {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .time-section {
+            text-align: center;
+        }
+        #explanation {
+            white-space: normal;
+            line-height: 1.6;
+            font-size: 1rem;
+            color: #e0e0e0;
+            word-wrap: break-word;
+            overflow-y: auto;
+            max-height: 50vh;
+        }
+        #explanation strong {
+            color: #00e6e6;
+            text-shadow: 0 0 5px #00e6e6;
+        }
+        #explanation ul {
+            list-style-type: disc;
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        #explanation li {
+            margin-bottom: 8px;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 min-h-screen flex flex-col items-center justify-center p-4">
+    <div id="explosion-overlay"></div>
+    <div id="game-container" class="max-w-4xl w-full bomb-container p-6">
+        <h1 class="text-3xl font-bold text-red-500 mb-4 text-center">【末日炸彈】緊急拆彈協議：電線解謎遊戲</h1>
+        <p class="text-sm mb-6 text-justify">
+            在遙遠的未來，地球上最後一座堡壘城市「諾亞方舟」正面臨大危機！一群壞蛋偷偷放了一枚超危險的「末日炸彈」，它連接到城市的電力系統和太空衛星，只要炸開，嗶！所有機器都會壞掉，大家會陷入大麻煩！這顆炸彈有個很聰明的鎖，裡面有很多彩色電線，每條線就像一個魔法開關，從左到右有不同的「能量值」。炸彈的螢幕會顯示一個「解鎖數字」，你得把這個數字變成電線的開關組合，決定哪些線要剪斷（關掉，0）或保持完整（開著，1）。剪錯線？砰！炸彈會爆炸！
+            <br><br>
+            你是城市裡最厲害的拆彈英雄，現在得趕快行動！炸彈的計時器已經開始滴答響了。你可以先選擇任務難度：選幾條電線（4、6、7、8、10或12條），這會決定謎題有多難；選倒數時間（30、60、90、120或180秒），挑戰你的速度；還可以自己輸入或讓系統隨機給你一個解鎖數字。遊戲開始後，螢幕會閃出目標數字，你要快速點擊電線，切換它們的狀態——完整（1）像條長長的線，剪斷（0）會變短，還會有火花和煙霧！每條線下面有它的「能量值」，就像魔法數字，幫你算出怎麼組合才能對。
+            <br><br>
+            當你覺得電線的開關組合對了，按下「拆除炸彈」鍵，計時器會停下來，檢查每條線：對的會閃綠光，錯的閃紅光。如果全對，耶！你救城市了！如果錯了，轟！炸彈會炸開。遊戲有超酷的音效：計時器像心跳聲，剪線有金屬「喀嚓」聲，時間快沒時會更緊張！準備好當英雄了嗎？快來挑戰，救大家！
+        </p>
+        
+        <!-- Settings -->
+        <div id="settings" class="mb-6">
+            <label class="block mb-2">電線數：</label>
+            <select id="wire-count" class="bg-gray-700 text-white p-2 rounded w-full mb-4">
+                <option value="4">4</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="10">10</option>
+                <option value="12">12</option>
+            </select>
+            <label class="block mb-2">倒數時間 (秒)：</label>
+            <select id="timer-duration" class="bg-gray-700 text-white p-2 rounded w-full mb-4">
+                <option value="30">30</option>
+                <option value="60">60</option>
+                <option value="90">90</option>
+                <option value="120">120</option>
+                <option value="180">180</option>
+            </select>
+            <label class="block mb-2">目標解鎖數字 (留空為隨機，範圍 1 至 <span id="max-target">15</span>)：</label>
+            <input type="number" id="target-number" class="bg-gray-700 text-white p-2 rounded w-full mb-4">
+            <div id="error-message" class="text-red-500 mb-4 hidden"></div>
+            <button id="start-game" class="bg-red-600 text-white px-4 py-2 rounded w-full hover:bg-red-700">啟動任務</button>
+        </div>
+        
+        <!-- Game Area -->
+        <div id="game-area" class="hidden">
+            <div class="text-center mb-4">
+                <h2 class="text-2xl font-bold">目標解鎖數字：</h2>
+                <span id="target-display" class="text-5xl text-yellow-400 animate-pulse"></span>
+            </div>
+            <div class="text-center mb-4">
+                <h2 class="text-xl">剩餘時間：</h2>
+                <div id="countdown">
+                    <div class="time-section">
+                        <span id="minutes" class="time">00</span>
+                        <span class="label">分</span>
+                    </div>
+                    <div class="time-section">
+                        <span id="seconds" class="time">00</span>
+                        <span class="label">秒</span>
+                    </div>
+                </div>
+            </div>
+            <div id="wire-grid" class="wire-grid mb-6"></div>
+            <button id="confirm" class="bg-green-600 text-white px-4 py-2 rounded w-full hover:bg-green-700">拆除炸彈</button>
+        </div>
+    </div>
+    
+    <!-- Message Box -->
+    <div id="message-box" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75 hidden">
+        <div class="bg-gray-800 p-6 rounded-lg text-center max-w-lg w-full">
+            <p id="message-text" class="text-2xl mb-4"></p>
+            <div id="explanation" class="text-base mb-4 text-left"></div>
+            <button id="close-message" class="bg-blue-600 text-white px-4 py-2 rounded">關閉</button>
+        </div>
+    </div>
+    
+    <script>
+        // Game variables
+        let wireCount = 4;
+        let timerDuration = 60;
+        let targetNumber = 0;
+        let wires = [];
+        let timerInterval;
+        let remainingTime;
+        let bgmLoop;
+        let currentBPM = 60;
+        
+        // Tone.js setup
+        const synth = new Tone.Synth({ oscillator: { type: 'square' } }).toDestination();
+        const metalSynth = new Tone.MetalSynth().toDestination();
+        const polySynth = new Tone.PolySynth().toDestination();
+        const noiseSynth = new Tone.NoiseSynth().toDestination();
+        const membraneSynth = new Tone.MembraneSynth().toDestination();
+        
+        // Update max target display and validate input
+        function updateMaxTarget() {
+            wireCount = parseInt(document.getElementById('wire-count').value);
+            const maxTarget = Math.pow(2, wireCount) - 1;
+            document.getElementById('max-target').textContent = maxTarget;
+            const targetInput = document.getElementById('target-number');
+            targetInput.setAttribute('max', maxTarget);
+            targetInput.setAttribute('min', 1);
+            validateTargetInput();
+        }
+        
+        // Validate target input in real-time
+        function validateTargetInput() {
+            const targetInput = document.getElementById('target-number');
+            const errorMessage = document.getElementById('error-message');
+            const manualTarget = parseInt(targetInput.value);
+            const maxTarget = Math.pow(2, wireCount) - 1;
+            
+            if (targetInput.value !== '' && (isNaN(manualTarget) || manualTarget < 1 || manualTarget > maxTarget)) {
+                errorMessage.textContent = `請輸入 1 至 ${maxTarget} 的數字！`;
+                errorMessage.classList.remove('hidden');
+                document.getElementById('start-game').setAttribute('disabled', 'true');
+                document.getElementById('start-game').classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                errorMessage.classList.add('hidden');
+                document.getElementById('start-game').removeAttribute('disabled');
+                document.getElementById('start-game').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+        
+        // Initialize max target and input validation
+        document.getElementById('wire-count').addEventListener('change', updateMaxTarget);
+        document.getElementById('target-number').addEventListener('input', validateTargetInput);
+        updateMaxTarget();
+        
+        // Start game with validation
+        document.getElementById('start-game').addEventListener('click', async () => {
+            wireCount = parseInt(document.getElementById('wire-count').value);
+            timerDuration = parseInt(document.getElementById('timer-duration').value);
+            const manualTarget = parseInt(document.getElementById('target-number').value);
+            const maxTarget = Math.pow(2, wireCount) - 1;
+            
+            if (!isNaN(manualTarget) && (manualTarget < 1 || manualTarget > maxTarget)) {
+                return; // Validation already handled by input event
+            }
+            
+            await Tone.start();
+            targetNumber = isNaN(manualTarget) || manualTarget < 1 || manualTarget > maxTarget ? Math.floor(Math.random() * maxTarget) + 1 : manualTarget;
+            
+            document.getElementById('settings').classList.add('hidden');
+            document.getElementById('game-area').classList.remove('hidden');
+            document.getElementById('target-display').textContent = targetNumber;
+            
+            initWires();
+            startTimer();
+            startBGM();
+        });
+        
+        // Initialize wires
+        function initWires() {
+            const grid = document.getElementById('wire-grid');
+            grid.innerHTML = '';
+            wires = [];
+            const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#FFA500', '#800080', '#008000', '#000080', '#808000', '#800000'];
+            for (let i = 0; i < wireCount; i++) {
+                const wireContainer = document.createElement('div');
+                wireContainer.classList.add('wire-container', 'bg-gray-700', 'p-3', 'rounded-lg', 'text-center', 'shadow-lg', 'border', 'border-gray-600');
+                wireContainer.dataset.index = i;
+                
+                const wire = document.createElement('div');
+                wire.classList.add('wire', 'wire-intact');
+                wire.style.backgroundColor = colors[i % colors.length];
+                wireContainer.appendChild(wire);
+                
+                const stateIndicator = document.createElement('div');
+                stateIndicator.classList.add('state-indicator');
+                stateIndicator.style.backgroundColor = colors[i % colors.length] + '80';
+                stateIndicator.textContent = '1';
+                wireContainer.appendChild(stateIndicator);
+                
+                const label = document.createElement('p');
+                label.classList.add('mt-2', 'text-sm');
+                label.textContent = '電線能量';
+                
+                const numberIndicator = document.createElement('span');
+                numberIndicator.classList.add('number-indicator');
+                numberIndicator.style.backgroundColor = colors[i % colors.length] + '40';
+                numberIndicator.textContent = Math.pow(2, wireCount - 1 - i);
+                label.appendChild(document.createElement('br'));
+                label.appendChild(numberIndicator);
+                
+                wireContainer.appendChild(label);
+                
+                wireContainer.dataset.state = '1';
+                wireContainer.dataset.color = colors[i % colors.length];
+                wireContainer.addEventListener('click', toggleWire);
+                wireContainer.addEventListener('touchstart', toggleWire, { passive: true });
+                grid.appendChild(wireContainer);
+                wires.push(wireContainer);
+            }
+        }
+        
+        // Toggle wire state
+        function toggleWire(e) {
+            e.preventDefault();
+            const container = e.currentTarget;
+            const wire = container.querySelector('.wire');
+            const stateIndicator = container.querySelector('.state-indicator');
+            const color = container.dataset.color;
+            if (container.dataset.state === '1') {
+                container.dataset.state = '0';
+                wire.classList.remove('wire-intact');
+                wire.classList.add('wire-cut');
+                stateIndicator.textContent = '0';
+                metalSynth.triggerAttackRelease('C2', '8n');
+                showCutEffect(container);
+                createSparks(container);
+                createSmoke(container);
+            } else {
+                container.dataset.state = '1';
+                wire.classList.remove('wire-cut');
+                wire.classList.add('wire-intact');
+                wire.style.backgroundColor = color;
+                stateIndicator.textContent = '1';
+                synth.triggerAttackRelease('C4', '8n');
+            }
+        }
+        
+        // Show cut effect
+        function showCutEffect(container) {
+            const cutEffect = document.createElement('div');
+            cutEffect.classList.add('cut-effect');
+            cutEffect.textContent = '✂️';
+            container.appendChild(cutEffect);
+            setTimeout(() => {
+                cutEffect.remove();
+            }, 300);
+        }
+        
+        // Create sparks
+        function createSparks(container) {
+            for (let i = 0; i < 10; i++) {
+                const spark = document.createElement('div');
+                spark.classList.add('spark');
+                const dx = (Math.random() - 0.5) * 20;
+                const dy = (Math.random() - 0.5) * 20;
+                spark.style.setProperty('--dx', `${dx}px`);
+                spark.style.setProperty('--dy', `${dy}px`);
+                spark.style.top = '50%';
+                spark.style.left = '50%';
+                container.appendChild(spark);
+                setTimeout(() => {
+                    spark.remove();
+                }, 500);
+            }
+        }
+        
+        // Create smoke
+        function createSmoke(container) {
+            for (let i = 0; i < 8; i++) {
+                const smoke = document.createElement('div');
+                smoke.classList.add('smoke');
+                const dx = (Math.random() - 0.5) * 15;
+                const dy = (Math.random() - 0.5) * 15 - 10; // Slightly upward bias
+                smoke.style.setProperty('--dx', `${dx}px`);
+                smoke.style.setProperty('--dy', `${dy}px`);
+                smoke.style.top = '50%';
+                smoke.style.left = '50%';
+                container.appendChild(smoke);
+                setTimeout(() => {
+                    smoke.remove();
+                }, 700);
+            }
+        }
+        
+        // Start timer
+        function startTimer() {
+            remainingTime = timerDuration;
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                remainingTime--;
+                updateTimerDisplay();
+                if (remainingTime <= 0) {
+                    clearInterval(timerInterval);
+                    failGame();
+                }
+                updateBPM();
+            }, 1000);
+        }
+        
+        // Update timer display with countdown format
+        function updateTimerDisplay() {
+            const minutes = Math.floor(remainingTime / 60);
+            const seconds = remainingTime % 60;
+            document.getElementById('minutes').textContent = ("0" + minutes).slice(-2);
+            document.getElementById('seconds').textContent = ("0" + seconds).slice(-2);
+        }
+        
+        // Update BPM and shadow
+        function updateBPM() {
+            let newBPM = 60;
+            let shadowClass = 'shadow-warning-low';
+            if (remainingTime <= 15) {
+                newBPM = 90;
+                shadowClass = 'shadow-warning-high';
+            }
+            if (remainingTime <= 5) newBPM = 120;
+            if (newBPM !== currentBPM) {
+                currentBPM = newBPM;
+                bgmLoop.stop();
+                bgmLoop = new Tone.Loop(time => {
+                    membraneSynth.triggerAttackRelease('C1', '8n', time);
+                }, 60 / currentBPM);
+                bgmLoop.start(0);
+            }
+            const countdownEl = document.getElementById('countdown');
+            countdownEl.classList.remove('shadow-warning-low', 'shadow-warning-high');
+            countdownEl.classList.add(shadowClass);
+        }
+        
+        // Start BGM
+        function startBGM() {
+            Tone.Transport.start();
+            bgmLoop = new Tone.Loop(time => {
+                membraneSynth.triggerAttackRelease('C1', '8n', time);
+            }, 60 / currentBPM);
+            bgmLoop.start(0);
+        }
+        
+        // Confirm button
+        document.getElementById('confirm').addEventListener('click', () => {
+            clearInterval(timerInterval);
+            bgmLoop.stop();
+            validateWires();
+        });
+        
+        // Validate wires
+        async function validateWires() {
+            let playerValue = 0;
+            for (let i = 0; i < wires.length; i++) {
+                const state = parseInt(wires[i].dataset.state);
+                playerValue += state * Math.pow(2, wireCount - 1 - i);
+            }
+            if (playerValue === targetNumber) {
+                await animateValidation(true);
+                successGame();
+            } else {
+                await animateValidation(false);
+                failGame();
+            }
+        }
+        
+        // Animate validation
+        async function animateValidation(isCorrect) {
+            for (let i = 0; i < wires.length; i++) {
+                const correctState = (targetNumber >> (wireCount - 1 - i)) & 1;
+                const playerState = parseInt(wires[i].dataset.state);
+                const animClass = playerState === correctState ? 'pulse-green' : 'pulse-red';
+                wires[i].classList.add(animClass);
+                await new Promise(resolve => setTimeout(resolve, 500));
+                wires[i].classList.remove(animClass);
+            }
+        }
+        
+        // Get correct binary sequence and explanation for kids using sequential subtraction
+        function getCorrectExplanation() {
+            const binary = targetNumber.toString(2).padStart(wireCount, '0');
+            let remaining = targetNumber;
+            let explanation = `
+                <p><strong>正確組合：</strong> ${binary.split('').join(' ')}</p>
+                <p>這就像一個超酷的數字遊戲！炸彈給我們數字 <strong>${targetNumber}</strong>，我們要用電線的能量值，一步步減掉，直到剛好等於它！能量值從左到右越來越小，像不同大小的糖果：</p>
+                <ul>
+            `;
+            
+            const weights = Array.from({ length: wireCount }, (_, i) => Math.pow(2, wireCount - 1 - i));
+            let steps = [];
+            for (let i = 0; i < wireCount; i++) {
+                const weight = weights[i];
+                const bit = binary[i];
+                if (weight <= remaining) {
+                    explanation += `<li>第 ${i+1} 條線（能量值 <strong>${weight}</strong>）：可以用！保持完整（1），從 <strong>${remaining}</strong> 減掉 <strong>${weight}</strong>，剩下 <strong>${remaining - weight}</strong>。</li>`;
+                    steps.push(`${remaining} - ${weight} = ${remaining - weight}`);
+                    remaining -= weight;
+                } else {
+                    explanation += `<li>第 ${i+1} 條線（能量值 <strong>${weight}</strong>）：太大了，用不到，剪斷（0）。</li>`;
+                }
+            }
+            
+            explanation += `</ul><p>我們的計算步驟：</p><ul>`;
+            steps.forEach(step => {
+                explanation += `<li>${step}</li>`;
+            });
+            explanation += `</ul><p>這樣就得到數字 <strong>${targetNumber}</strong> 的組合！下次試著一步步選對能量值哦！</p>`;
+            return explanation;
+        }
+        
+        // Success
+        function successGame() {
+            polySynth.triggerAttackRelease(['C4', 'E4', 'G4'], '2n');
+            showMessage('太棒了！你成功拆掉炸彈，救了城市！', getCorrectExplanation(), true);
+        }
+        
+        // Fail
+        function failGame() {
+            noiseSynth.triggerAttackRelease('8n');
+            document.getElementById('explosion-overlay').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('explosion-overlay').style.display = 'none';
+                showMessage('哎呀！炸彈爆炸了！', getCorrectExplanation(), false);
+            }, 2000);
+        }
+        
+        // Show message
+        function showMessage(text, explanation, reset) {
+            document.getElementById('message-text').textContent = text;
+            document.getElementById('explanation').innerHTML = explanation;
+            document.getElementById('message-box').classList.remove('hidden');
+            document.getElementById('close-message').addEventListener('click', () => {
+                document.getElementById('message-box').classList.add('hidden');
+                Tone.Transport.stop();
+                if (reset) {
+                    document.getElementById('settings').classList.remove('hidden');
+                    document.getElementById('game-area').classList.add('hidden');
+                } else {
+                    location.reload();
+                }
+            }, { once: true });
+        }
+    </script>
+</body>
+</html>
+```
