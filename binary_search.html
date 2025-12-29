@@ -1,0 +1,621 @@
+import React, { useState, useEffect } from 'react';
+import { RefreshCw, CheckCircle, HelpCircle, Settings, Play, Trophy, XCircle, Search, Microscope, ArrowRight, ArrowLeft, Bomb, Flame, Eye, EyeOff, Timer, BookOpen, X, ChevronRight } from 'lucide-react';
+
+export default function App() {
+  const [gameState, setGameState] = useState('setup'); // setup, preview, playing, won, revealed, exploded
+  const [config, setConfig] = useState({ min: 1, max: 100 });
+  const [numbers, setNumbers] = useState([]);
+  const [missingNumber, setMissingNumber] = useState(null);
+  const [userGuess, setUserGuess] = useState('');
+  const [message, setMessage] = useState({ text: '', type: '' });
+  const [shake, setShake] = useState(false);
+  
+  // State for Binary Search teaching
+  const [isInvestigateMode, setIsInvestigateMode] = useState(false);
+  const [searchRange, setSearchRange] = useState({ startIdx: 0, endIdx: 0 }); 
+  const [steps, setSteps] = useState(0);
+  const [maxSteps, setMaxSteps] = useState(0);
+  const [optimalSteps, setOptimalSteps] = useState(0); // Mathematical optimal steps
+  
+  // New: Hide numbers to prevent visual cheating
+  const [isBlindMode, setIsBlindMode] = useState(true); 
+  const [inspectedIndices, setInspectedIndices] = useState(new Set());
+  
+  // Tutorial Modal State
+  const [showTutorial, setShowTutorial] = useState(false);
+  
+  // Preview Timer
+  const [timeLeft, setTimeLeft] = useState(0);
+
+  // Preview Timer Logic
+  useEffect(() => {
+    if (gameState === 'preview') {
+      if (timeLeft > 0) {
+        const timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
+        return () => clearTimeout(timer);
+      } else {
+        // Time is up, switch to playing blind
+        setGameState('playing');
+        setIsInvestigateMode(true);
+        setIsBlindMode(true);
+        setMessage({ text: '時間到！數字已隱藏，請開始使用二分搜尋法。', type: 'info' });
+      }
+    }
+  }, [gameState, timeLeft]);
+
+  // Initialize game
+  const startGame = () => {
+    if (parseInt(config.min) >= parseInt(config.max)) {
+      setMessage({ text: '起始數字必須小於結束數字！', type: 'error' });
+      return;
+    }
+
+    const min = parseInt(config.min);
+    const max = parseInt(config.max);
+    const count = max - min + 1;
+    
+    // Generate range
+    const fullRange = Array.from({ length: count }, (_, i) => min + i);
+    
+    // Pick random number to remove
+    const randomIndex = Math.floor(Math.random() * fullRange.length);
+    const missing = fullRange[randomIndex];
+    
+    // Create grid data by REMOVING the number entirely
+    const gridData = fullRange.filter(n => n !== missing);
+
+    // Calculate max allowed steps and optimal steps
+    // Optimal steps for binary search is ceil(log2(N))
+    const calcOptimal = Math.ceil(Math.log2(count));
+    const allowedSteps = calcOptimal + 5; 
+
+    setNumbers(gridData);
+    setMissingNumber(missing);
+    
+    // Start with PREVIEW mode
+    setGameState('preview');
+    setTimeLeft(3); // 3 seconds preview
+    
+    setUserGuess('');
+    setMessage({ text: '請把握 3 秒鐘觀察數字範圍！', type: 'info' });
+    
+    // Reset investigation state
+    setIsInvestigateMode(false);
+    setIsBlindMode(false); // Show numbers initially during preview
+    setInspectedIndices(new Set());
+    setSearchRange({ startIdx: 0, endIdx: gridData.length - 1 });
+    setSteps(0);
+    setMaxSteps(allowedSteps);
+    setOptimalSteps(calcOptimal);
+    setShowTutorial(false);
+  };
+
+  const restoreMissingNumber = () => {
+    setNumbers(prev => {
+      if (prev.includes(missingNumber)) return prev;
+      const newNumbers = [...prev, missingNumber];
+      return newNumbers.sort((a, b) => a - b);
+    });
+  };
+
+  const handleNumberClick = (num, idx) => {
+    if (gameState !== 'playing') return;
+
+    if (isInvestigateMode) {
+      // If already inspected, don't count step again (optional)
+      if (!inspectedIndices.has(idx)) {
+         const nextStep = steps + 1;
+         setSteps(nextStep);
+         setInspectedIndices(prev => new Set(prev).add(idx));
+
+         // Check for explosion
+         if (nextStep > maxSteps) {
+           setGameState('exploded');
+           setMessage({ text: '💥 轟！操作次數過多，觸發地雷爆炸了！', type: 'error' });
+           restoreMissingNumber();
+           return;
+         }
+      }
+
+      // Binary Search Logic Investigation
+      const min = parseInt(config.min);
+      const expectedVal = min + idx; // Should be this if no missing numbers before
+      
+      if (num === expectedVal) {
+        setSearchRange(prev => ({
+          ...prev,
+          startIdx: Math.max(prev.startIdx, idx + 1)
+        }));
+        setMessage({ 
+          text: `🔍 檢查第 ${idx + 1} 格：數字是 ${num} (符合預期)。缺號在後面！`, 
+          type: 'info' 
+        });
+      } else {
+        setSearchRange(prev => ({
+          ...prev,
+          endIdx: Math.min(prev.endIdx, idx - 1)
+        }));
+         setMessage({ 
+          text: `🔍 檢查第 ${idx + 1} 格：數字是 ${num} (原本應是 ${expectedVal})。缺號在前面！`, 
+          type: 'warning' 
+        });
+      }
+    } else {
+      setUserGuess(num.toString());
+    }
+  };
+
+  const handleCheck = (e) => {
+    e.preventDefault();
+    if (!userGuess) return;
+    const guess = parseInt(userGuess);
+    if (guess === missingNumber) {
+      setGameState('won');
+      setMessage({ text: `太棒了！你用了 ${steps} 次檢查就找到了答案！ 🎉`, type: 'success' });
+      restoreMissingNumber();
+      setSearchRange({ startIdx: 0, endIdx: numbers.length }); 
+      
+      // Check if user used optimal steps strategy
+      if (steps > 0 && steps <= optimalSteps) {
+        setShowTutorial(true);
+      }
+    } else {
+      setMessage({ text: '再試試看！不是這個數字喔。', type: 'error' });
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+    }
+  };
+
+  const handleGiveUp = () => {
+    setGameState('revealed');
+    setMessage({ text: `答案是 ${missingNumber}！下次再接再厲！`, type: 'info' });
+    restoreMissingNumber();
+     setSearchRange({ startIdx: 0, endIdx: numbers.length });
+  };
+
+  const resetGame = () => {
+    setGameState('setup');
+    setMessage({ text: '', type: '' });
+    setUserGuess('');
+    setSteps(0);
+    setIsInvestigateMode(false);
+    setInspectedIndices(new Set());
+    setShowTutorial(false);
+  };
+
+  const toggleInvestigateMode = () => {
+    const newMode = !isInvestigateMode;
+    setIsInvestigateMode(newMode);
+    // If turning on investigate mode, ensure blind mode is on for best experience
+    if (newMode) setIsBlindMode(true);
+    setMessage({ text: '', type: '' });
+  };
+
+  return (
+    <div className={`min-h-screen font-sans p-2 sm:p-4 flex flex-col items-center transition-colors duration-500 ${gameState === 'exploded' ? 'bg-red-50' : 'bg-slate-50'} text-slate-800`}>
+      
+      {/* Header */}
+      <header className="w-full max-w-4xl mb-4 text-center">
+        <h1 className={`text-2xl sm:text-3xl font-bold mb-1 flex items-center justify-center gap-2 transition-colors ${gameState === 'exploded' ? 'text-red-600' : 'text-indigo-600'}`}>
+          {gameState === 'exploded' ? <Flame className="w-8 h-8 animate-pulse" /> : <HelpCircle className="w-6 h-6 sm:w-8 sm:h-8" />}
+          {gameState === 'exploded' ? '任務失敗：地雷爆炸' : '尋找消失的數字'}
+        </h1>
+        <p className="text-sm sm:text-base text-slate-500">
+          {gameState === 'exploded' 
+            ? "你檢查了太多次，觸發了警報系統！"
+            : gameState === 'preview'
+              ? "快記住數字分佈！" 
+              : isInvestigateMode 
+                ? isBlindMode ? "數字已隱藏！請點擊格子檢查，找出規律斷裂處。" : "注意！點擊次數有限，請謹慎選擇檢查點！" 
+                : "數字連續排列，你能看出少了哪一個嗎？"}
+        </p>
+      </header>
+
+      {/* Setup Screen */}
+      {gameState === 'setup' && (
+        <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl w-full max-w-md border-2 border-indigo-100 mt-4">
+          <div className="flex items-center gap-2 mb-6 text-indigo-600">
+            <Settings className="w-6 h-6" />
+            <h2 className="text-xl font-bold">遊戲設定</h2>
+          </div>
+          
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-600 mb-2">起始數字</label>
+                <input
+                  type="number"
+                  value={config.min}
+                  onChange={(e) => setConfig({ ...config, min: e.target.value })}
+                  className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-lg font-medium"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-600 mb-2">結束數字</label>
+                <input
+                  type="number"
+                  value={config.max}
+                  onChange={(e) => setConfig({ ...config, max: e.target.value })}
+                  className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-lg font-medium"
+                />
+              </div>
+            </div>
+
+            {message.type === 'error' && (
+              <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm flex items-center gap-2 animate-pulse">
+                <XCircle className="w-4 h-4" />
+                {message.text}
+              </div>
+            )}
+
+            <button
+              onClick={startGame}
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 text-lg"
+            >
+              <Play className="w-6 h-6" />
+              開始生成題目
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Game Screen */}
+      {(gameState === 'playing' || gameState === 'won' || gameState === 'revealed' || gameState === 'exploded' || gameState === 'preview') && (
+        <div className="w-full max-w-5xl flex flex-col items-center">
+          
+          {/* Controls / Status Bar */}
+          <div className="w-full max-w-md flex flex-col gap-3 mb-4">
+            
+            {/* Top Bar: Info & Reset */}
+            <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-slate-200">
+               <div className="flex items-center gap-2 text-sm sm:text-base">
+                <span className="text-slate-500 font-medium">範圍:</span>
+                <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-bold">
+                  {config.min} - {config.max}
+                </span>
+              </div>
+              <button 
+                onClick={resetGame}
+                className="text-slate-500 hover:text-indigo-600 flex items-center gap-2 text-sm font-medium transition-colors"
+              >
+                <RefreshCw className="w-4 h-4" />
+                重新設定
+              </button>
+            </div>
+
+            {/* Preview Countdown */}
+            {gameState === 'preview' && (
+              <div className="w-full bg-indigo-600 text-white py-4 px-4 rounded-xl font-bold flex items-center justify-center gap-3 shadow-lg animate-pulse">
+                <Timer className="w-6 h-6" />
+                <span className="text-xl">記憶時間：{timeLeft} 秒</span>
+              </div>
+            )}
+
+            {/* Investigation Toggle */}
+             {(gameState === 'playing') && (
+              <div className="w-full space-y-2">
+                <div className="flex gap-2">
+                  <button
+                    onClick={toggleInvestigateMode}
+                    className={`flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-sm border-2
+                      ${isInvestigateMode 
+                        ? 'bg-rose-50 border-rose-300 text-rose-700 ring-2 ring-rose-200' 
+                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                      }`}
+                  >
+                    {isInvestigateMode ? <Bomb className="w-5 h-5 animate-pulse" /> : <Search className="w-5 h-5" />}
+                    {isInvestigateMode ? '偵探模式 (已開啟)' : '開啟偵探線索模式'}
+                  </button>
+                  
+                  {isInvestigateMode && (
+                    <button
+                      onClick={() => setIsBlindMode(!isBlindMode)}
+                      className={`px-3 rounded-xl border-2 flex items-center justify-center transition-all
+                        ${isBlindMode ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-400 border-slate-200'}
+                      `}
+                      title={isBlindMode ? "顯示數字" : "隱藏數字"}
+                    >
+                      {isBlindMode ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  )}
+                </div>
+                
+                {isInvestigateMode && (
+                  <div className="flex justify-between items-center gap-2 bg-white p-2 rounded-lg border border-slate-200 shadow-sm animate-fade-in">
+                     <div className="flex items-center gap-2 text-slate-600 text-sm">
+                        <Microscope className="w-4 h-4" />
+                        <span>已檢查: {steps}</span>
+                     </div>
+                     <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-rose-600">剩餘安全次數:</span>
+                        <span className={`px-3 py-0.5 rounded-full font-mono font-bold shadow-sm min-w-[2rem] text-center text-white
+                          ${maxSteps - steps <= 3 ? 'bg-rose-600 animate-pulse' : 'bg-slate-400'}
+                        `}>
+                          {Math.max(0, maxSteps - steps)}
+                        </span>
+                     </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Number Grid */}
+          <div className={`bg-white p-3 rounded-xl shadow-lg border-2 w-fit mx-auto mb-6 relative overflow-hidden transition-all duration-500 ${gameState === 'exploded' ? 'border-rose-400 shadow-rose-200' : 'border-slate-200'}`}>
+            
+            {/* Range Indicators */}
+            {isInvestigateMode && gameState === 'playing' && (
+              <div className="absolute top-0 left-0 w-full h-1 bg-slate-100 z-10">
+                <div 
+                  className="h-full bg-rose-500 transition-all duration-500"
+                  style={{
+                    marginLeft: `${(searchRange.startIdx / numbers.length) * 100}%`,
+                    width: `${((searchRange.endIdx - searchRange.startIdx + 1) / numbers.length) * 100}%`
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Explosion Overlay */}
+            {gameState === 'exploded' && (
+              <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/80 backdrop-blur-sm animate-fade-in">
+                <div className="text-center">
+                  <Flame className="w-16 h-16 text-rose-600 mx-auto mb-2 animate-bounce" />
+                  <div className="text-2xl font-bold text-rose-700">BOOM!</div>
+                </div>
+              </div>
+            )}
+
+            <div 
+              className="grid gap-1 justify-center"
+              style={{
+                gridTemplateColumns: 'repeat(9, 2.2rem)'
+              }}
+            >
+              {numbers.map((num, idx) => {
+                const isTheMissingOne = (gameState === 'won' || gameState === 'revealed' || gameState === 'exploded') && num === missingNumber;
+                const isEliminated = isInvestigateMode && (idx < searchRange.startIdx || idx > searchRange.endIdx);
+                const isInspected = inspectedIndices.has(idx);
+                
+                // Content Logic:
+                // 1. Preview mode: SHOW number
+                // 2. Playing + Blind + Not Inspected: HIDE number
+                let content = num;
+                if (gameState === 'playing' && isInvestigateMode && isBlindMode && !isInspected) {
+                  content = '?';
+                }
+
+                return (
+                  <button
+                    key={`${num}-${idx}`}
+                    onClick={() => handleNumberClick(num, idx)}
+                    disabled={gameState !== 'playing'}
+                    className={`
+                      aspect-square flex items-center justify-center text-sm sm:text-base font-bold rounded-md transition-all duration-300 relative
+                      ${isEliminated ? 'opacity-20 grayscale cursor-not-allowed bg-slate-100 text-slate-400' : ''}
+                      ${isTheMissingOne
+                        ? `transform scale-110 shadow-lg ring-2 ring-offset-1 z-20 
+                           ${gameState === 'won' ? 'bg-green-500 text-white ring-green-300' : ''}
+                           ${gameState === 'exploded' ? 'bg-rose-600 text-white ring-rose-400 animate-pulse' : ''}
+                           ${gameState === 'revealed' ? 'bg-amber-500 text-white ring-amber-300' : ''}`
+                        : !isEliminated && isInvestigateMode && gameState === 'playing'
+                            ? content === '?' 
+                                ? 'bg-indigo-600 text-white shadow-md hover:bg-indigo-700 active:scale-95' // Hidden state style
+                                : 'bg-white text-indigo-700 border-2 border-indigo-200' // Revealed state style
+                            : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200'}
+                    `}
+                  >
+                    {content}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Answer Input Area */}
+          <div className={`w-full max-w-md transition-all duration-300 ${shake ? 'animate-shake' : ''}`}>
+            
+            {/* Feedback Message */}
+            <div className={`text-center font-bold text-base min-h-[1.5rem] mb-4 transition-colors duration-300 flex items-center justify-center gap-2 px-4
+                ${message.type === 'success' ? 'text-green-600' : ''}
+                ${message.type === 'error' ? 'text-rose-600' : ''}
+                ${message.type === 'info' ? 'text-indigo-600' : ''}
+                ${message.type === 'warning' ? 'text-amber-600' : ''}
+              `}>
+                {message.type === 'info' && <ArrowRight className="w-5 h-5 flex-shrink-0" />}
+                {message.type === 'warning' && <ArrowLeft className="w-5 h-5 flex-shrink-0" />}
+                {message.type === 'error' && <Bomb className="w-5 h-5 flex-shrink-0" />}
+                {message.text}
+            </div>
+
+            <form onSubmit={handleCheck} className="relative mb-2">
+              <div className={`p-1.5 rounded-full shadow-xl border-2 flex items-center transition-colors
+                  ${gameState === 'exploded' ? 'bg-rose-50 border-rose-200 opacity-50' : 'bg-white border-indigo-100'}
+              `}>
+                <input
+                  type="number"
+                  value={userGuess}
+                  onChange={(e) => setUserGuess(e.target.value)}
+                  placeholder={gameState === 'exploded' ? "遊戲結束" : "輸入數字..."}
+                  disabled={gameState !== 'playing'}
+                  className="flex-1 px-4 py-2 text-lg outline-none bg-transparent placeholder-slate-400 font-bold text-slate-700 disabled:text-slate-400"
+                />
+                
+                {gameState === 'playing' && (
+                  <button
+                    type="submit"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white p-2.5 rounded-full shadow-md transition-all hover:scale-105 active:scale-95"
+                  >
+                    <CheckCircle className="w-5 h-5" />
+                  </button>
+                )}
+
+                {gameState === 'won' && (
+                   <div className="bg-green-500 text-white px-4 py-2 rounded-full font-bold flex items-center gap-1.5 animate-pulse whitespace-nowrap text-sm sm:text-base">
+                     <Trophy className="w-4 h-4" />
+                     答對了！
+                   </div>
+                )}
+                 {gameState === 'revealed' && (
+                   <div className="bg-amber-500 text-white px-4 py-2 rounded-full font-bold flex items-center gap-1.5 whitespace-nowrap text-sm sm:text-base">
+                     <XCircle className="w-4 h-4" />
+                     答案: {missingNumber}
+                   </div>
+                )}
+                {gameState === 'exploded' && (
+                   <div className="bg-rose-500 text-white px-4 py-2 rounded-full font-bold flex items-center gap-1.5 whitespace-nowrap text-sm sm:text-base">
+                     <Bomb className="w-4 h-4" />
+                     BOOM
+                   </div>
+                )}
+              </div>
+            </form>
+
+            {/* Actions */}
+            {gameState === 'playing' && (
+              <div className="text-center">
+                <button 
+                  onClick={handleGiveUp}
+                  className="text-slate-400 hover:text-slate-600 text-xs sm:text-sm font-medium underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 transition-all"
+                >
+                  看答案
+                </button>
+              </div>
+            )}
+            
+            {(gameState === 'won' || gameState === 'revealed' || gameState === 'exploded') && (
+               <div className="text-center">
+                <button
+                  onClick={startGame}
+                  className={`px-6 py-2.5 rounded-xl font-bold hover:shadow-lg transition-all transform hover:-translate-y-1 flex items-center gap-2 mx-auto text-sm sm:text-base text-white
+                    ${gameState === 'exploded' ? 'bg-rose-600 hover:bg-rose-700' : 'bg-slate-800 hover:bg-slate-700'}
+                  `}
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  再玩一次
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Binary Search Tutorial Modal */}
+      {showTutorial && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative overflow-hidden border-2 border-indigo-100 transform transition-all scale-100">
+            
+            {/* Background Decoration */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-bl-full -z-10 opacity-50"></div>
+            
+            <button 
+              onClick={() => setShowTutorial(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors bg-white rounded-full p-1"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            <h3 className="text-2xl font-bold text-indigo-600 mb-4 flex items-center gap-2">
+              <BookOpen className="w-8 h-8 text-indigo-500" />
+              你發現了「二分搜尋法」！
+            </h3>
+
+            {/* Animation Area */}
+            <div className="bg-slate-50 rounded-xl p-6 mb-5 border border-slate-100 relative overflow-hidden flex flex-col items-center justify-center gap-2">
+                <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">搜尋過程視覺化</div>
+                
+                {/* Bar Container */}
+                <div className="w-full h-8 bg-indigo-100 rounded-full relative overflow-hidden shadow-inner">
+                    {/* The bar represents the search space */}
+                    {/* Animation overlays to simulate cutting */}
+                    <div className="absolute top-0 left-0 h-full bg-indigo-500 w-full animate-binary-search origin-left"></div>
+                </div>
+                
+                <div className="flex justify-between w-full text-xs text-slate-400 font-mono mt-1 px-1">
+                  <span>0%</span>
+                  <span>50%</span>
+                  <span>100%</span>
+                </div>
+            </div>
+
+            <div className="space-y-4 text-slate-600">
+              <p className="leading-relaxed">
+                太厲害了！你只用了 <span className="font-bold text-indigo-600 text-lg">{steps}</span> 次檢查就找到了答案。
+                這比電腦科學中著名的<strong>最佳次數 ({optimalSteps} 次)</strong> 還要快或一樣快！
+              </p>
+              
+              <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100 text-sm">
+                <h4 className="font-bold text-indigo-700 mb-1 flex items-center gap-1">
+                  <ChevronRight className="w-4 h-4" /> 
+                  什麼是二分搜尋法 (Binary Search)?
+                </h4>
+                <p className="text-indigo-800/80">
+                  不管範圍多大，只要每次都從<strong>中間</strong>切一半，剩下的範圍就會瞬間變得很小。
+                  就像把電話簿從中間翻開，就能馬上排除掉一半的頁數！
+                </p>
+              </div>
+
+              <p className="text-sm text-slate-500 italic">
+                💡 知識點：即使有 1,000,000 (一百萬) 個數字，用這個方法也只需要約 20 次就能找到目標！
+              </p>
+            </div>
+
+            <button
+              onClick={() => setShowTutorial(false)}
+              className="w-full mt-6 bg-indigo-600 text-white py-3.5 rounded-xl font-bold hover:bg-indigo-700 hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
+            >
+              <Trophy className="w-5 h-5" />
+              我學會了，太酷了！
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Global Styles for Animations */}
+      <style>{`
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-5px); }
+          75% { transform: translateX(5px); }
+        }
+        .animate-shake {
+          animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out forwards;
+        }
+        
+        /* Binary Search Animation */
+        @keyframes binary-search {
+          0% { width: 100%; opacity: 1; }
+          15% { width: 100%; opacity: 1; } /* Wait */
+          
+          /* Cut 1 */
+          20% { width: 50%; opacity: 0.9; } 
+          35% { width: 50%; opacity: 0.9; } /* Wait */
+          
+          /* Cut 2 */
+          40% { width: 25%; opacity: 0.8; }
+          55% { width: 25%; opacity: 0.8; } /* Wait */
+          
+          /* Cut 3 */
+          60% { width: 12.5%; opacity: 0.7; }
+          75% { width: 12.5%; opacity: 0.7; } /* Wait */
+          
+          /* Found */
+          80% { width: 5%; background-color: #10b981; opacity: 1; } 
+          95% { width: 5%; background-color: #10b981; opacity: 1; }
+          
+          100% { width: 100%; opacity: 0; } /* Reset */
+        }
+        .animate-binary-search {
+          animation: binary-search 4s infinite ease-in-out;
+        }
+      `}</style>
+    </div>
+  );
+}
