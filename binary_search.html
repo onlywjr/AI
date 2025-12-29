@@ -86,7 +86,7 @@
                     <input type="number" id="input-max" value="100" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-lg font-medium">
                 </div>
             </div>
-
+            
             <div id="setup-error" class="hidden p-3 bg-red-50 text-red-600 rounded-lg text-sm flex items-center gap-2 animate-pulse">
                 <i data-lucide="x-circle" class="w-4 h-4"></i>
                 <span id="setup-error-msg"></span>
@@ -280,7 +280,7 @@
             inspectedIndices: new Set(),
             searchRange: { startIdx: 0, endIdx: 0 },
             previewTimer: null,
-
+            
             init() {
                 lucide.createIcons();
             },
@@ -698,6 +698,9 @@
                 // 3.5rem for line number, then 9 columns of 3.5rem
                 container.style.gridTemplateColumns = '3.5rem repeat(9, 3.5rem)'; 
 
+                // Create a DocumentFragment to batch DOM insertions for performance
+                const fragment = document.createDocumentFragment();
+
                 let rowCount = 1;
 
                 this.numbers.forEach((num, idx) => {
@@ -706,7 +709,7 @@
                         const rowNum = document.createElement('div');
                         rowNum.className = "flex items-center justify-center text-slate-400 font-mono text-sm font-bold border-r-2 border-slate-100 mr-2";
                         rowNum.innerText = rowCount++;
-                        container.appendChild(rowNum);
+                        fragment.appendChild(rowNum);
                     }
 
                     const btn = document.createElement('button');
@@ -757,8 +760,11 @@
                     }
                     
                     btn.className = classes;
-                    container.appendChild(btn);
+                    fragment.appendChild(btn);
                 });
+                
+                // Append the entire fragment at once
+                container.appendChild(fragment);
             }
         };
 
