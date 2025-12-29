@@ -48,6 +48,13 @@
         .grid-btn:active {
             transform: scale(0.95);
         }
+        
+        /* 統一控制項樣式 */
+        .control-box {
+            height: 4rem; /* h-16 */
+            display: flex;
+            align-items: center;
+        }
     </style>
 </head>
 <body class="bg-slate-50 font-sans text-slate-800 p-2 sm:p-4 min-h-screen flex flex-col items-center transition-colors duration-500" id="body-bg">
@@ -93,43 +100,52 @@
     </div>
 
     <!-- Game Screen (Hidden by default) -->
-    <div id="game-screen" class="hidden w-full max-w-5xl flex flex-col items-center animate-fade-in">
+    <div id="game-screen" class="hidden w-fit mx-auto max-w-full flex flex-col gap-4 animate-fade-in">
         
-        <!-- Controls / Status Bar -->
-        <div class="w-full max-w-md flex flex-col gap-3 mb-4">
+        <!-- Controls & Input Area (Grid Layout for Alignment) -->
+        <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
             
-            <!-- Top Bar -->
-            <div class="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-slate-200">
-                <div class="flex items-center gap-2 text-sm sm:text-base">
-                    <span class="text-slate-500 font-medium">範圍:</span>
-                    <span id="display-range" class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-bold">1 - 100</span>
-                </div>
-                <button onclick="game.resetGame()" class="text-slate-500 hover:text-indigo-600 flex items-center gap-2 text-sm font-medium transition-colors">
-                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                    重新設定
-                </button>
-            </div>
-
-            <!-- Preview Countdown -->
-            <div id="preview-timer" class="hidden w-full bg-indigo-600 text-white py-4 px-4 rounded-xl font-bold flex items-center justify-center gap-3 shadow-lg animate-pulse">
-                <i data-lucide="timer" class="w-6 h-6"></i>
-                <span class="text-xl">記憶時間：<span id="timer-count">3</span> 秒</span>
-            </div>
-
-            <!-- Investigation Toggle -->
-            <div id="investigate-controls" class="hidden w-full space-y-2">
-                <div class="flex gap-2">
-                    <button id="btn-toggle-investigate" onclick="game.toggleInvestigateMode()" class="flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-sm border-2 bg-white border-slate-200 text-slate-600 hover:bg-slate-50">
-                        <i data-lucide="search" class="w-5 h-5"></i>
-                        <span>開啟偵探線索模式</span>
-                    </button>
-                    
-                    <button id="btn-toggle-blind" onclick="game.toggleBlindMode()" class="hidden px-3 rounded-xl border-2 flex items-center justify-center transition-all bg-slate-800 text-white border-slate-800" title="顯示/隱藏數字">
-                         <i id="icon-blind" data-lucide="eye-off" class="w-5 h-5"></i>
-                    </button>
-                </div>
+            <!-- Left Column: Range & Investigate Controls -->
+            <div class="flex flex-col gap-4">
                 
-                <div id="investigate-stats" class="hidden flex justify-between items-center gap-2 bg-white p-2 rounded-lg border border-slate-200 shadow-sm animate-fade-in">
+                <!-- 1. Top Bar: Range & Reset (Height Fixed) -->
+                <div class="control-box bg-white px-4 rounded-xl shadow-sm border border-slate-200 justify-between">
+                    <div class="flex items-center gap-2 text-sm sm:text-base">
+                        <span class="text-slate-500 font-medium">範圍:</span>
+                        <span id="display-range" class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-bold">1 - 100</span>
+                    </div>
+                    <button onclick="game.resetGame()" class="text-slate-500 hover:text-indigo-600 flex items-center gap-2 text-sm font-medium transition-colors">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                        重設
+                    </button>
+                </div>
+
+                <!-- Preview Timer (Shown only during preview) -->
+                <div id="preview-timer" class="hidden control-box w-full bg-indigo-600 text-white px-4 rounded-xl font-bold justify-center gap-3 shadow-lg animate-pulse">
+                    <i data-lucide="timer" class="w-6 h-6"></i>
+                    <span class="text-xl">記憶時間：<span id="timer-count">3</span> 秒</span>
+                </div>
+
+                <!-- 2. Investigate Toggle (Height Fixed) -->
+                <div id="investigate-controls" class="hidden w-full">
+                    <div class="flex gap-2 h-16">
+                        <button id="btn-toggle-investigate" onclick="game.toggleInvestigateMode()" class="flex-1 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-sm border-2 bg-white border-slate-200 text-slate-600 hover:bg-slate-50 h-full">
+                            <i data-lucide="search" class="w-5 h-5"></i>
+                            <span>開啟偵探線索模式</span>
+                        </button>
+                        
+                        <button id="btn-toggle-blind" onclick="game.toggleBlindMode()" class="hidden px-4 rounded-xl border-2 flex items-center justify-center transition-all bg-slate-800 text-white border-slate-800 h-full" title="顯示/隱藏數字">
+                             <i id="icon-blind" data-lucide="eye-off" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Stats & Input Area -->
+            <div id="input-section" class="w-full flex flex-col gap-4">
+                
+                <!-- 3. Investigate Stats (Height Fixed) -->
+                <div id="investigate-stats" class="hidden control-box bg-white px-4 rounded-xl border border-slate-200 shadow-sm animate-fade-in justify-between">
                     <div class="flex items-center gap-2 text-slate-600 text-sm">
                         <i data-lucide="microscope" class="w-4 h-4"></i>
                         <span>已檢查: <span id="step-count">0</span></span>
@@ -141,11 +157,46 @@
                         </span>
                     </div>
                 </div>
+
+                <!-- 4. Input Area (Height Fixed) -->
+                <form onsubmit="game.handleCheck(event)" class="w-full">
+                    <div id="input-container" class="control-box bg-white border-indigo-100 px-2 rounded-xl shadow-xl border-2 transition-colors">
+                        <input type="number" id="user-guess" placeholder="輸入數字..." class="flex-1 px-4 text-lg outline-none bg-transparent placeholder-slate-400 font-bold text-slate-700 disabled:text-slate-400 h-full">
+                        
+                        <!-- Submit Button -->
+                        <button type="submit" id="btn-submit" class="bg-indigo-600 hover:bg-indigo-700 text-white p-2.5 rounded-full shadow-md transition-all hover:scale-105 active:scale-95 flex-shrink-0">
+                            <i data-lucide="check-circle" class="w-5 h-5"></i>
+                        </button>
+
+                        <!-- Status Badges (Hidden by default) -->
+                        <div id="status-badge-won" class="hidden bg-green-500 text-white px-4 py-2 rounded-full font-bold flex items-center gap-1.5 animate-pulse whitespace-nowrap text-sm sm:text-base">
+                            <i data-lucide="trophy" class="w-4 h-4"></i> 答對了！
+                        </div>
+                        <div id="status-badge-revealed" class="hidden bg-amber-500 text-white px-4 py-2 rounded-full font-bold flex items-center gap-1.5 whitespace-nowrap text-sm sm:text-base">
+                            <i data-lucide="x-circle" class="w-4 h-4"></i> <span id="reveal-text">答案: ?</span>
+                        </div>
+                        <div id="status-badge-exploded" class="hidden bg-rose-500 text-white px-4 py-2 rounded-full font-bold flex items-center gap-1.5 whitespace-nowrap text-sm sm:text-base">
+                            <i data-lucide="bomb" class="w-4 h-4"></i> BOOM
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
 
+        <!-- Feedback Message (Moved to bottom to avoid misalignment) -->
+        <div id="feedback-msg" class="text-center font-bold text-base min-h-[1.5rem] transition-colors duration-300 flex items-center justify-center gap-2 px-4 text-indigo-600">
+            <!-- Icon and Text injected via JS -->
+        </div>
+
+        <!-- Actions (Restart Button) -->
+        <div id="action-area" class="text-center mb-2">
+            <button id="btn-restart" onclick="game.resetGame()" class="hidden px-6 py-2.5 rounded-xl font-bold hover:shadow-lg transition-all transform hover:-translate-y-1 flex items-center gap-2 mx-auto text-sm sm:text-base text-white bg-slate-800 hover:bg-slate-700">
+                <i data-lucide="refresh-cw" class="w-4 h-4"></i> 重新開始 (回到設定頁)
+            </button>
+        </div>
+
         <!-- Number Grid -->
-        <div id="grid-container" class="bg-white p-3 rounded-xl shadow-lg border-2 border-slate-200 w-fit mx-auto mb-6 relative overflow-hidden transition-all duration-500">
+        <div id="grid-container" class="w-full bg-white p-3 rounded-xl shadow-lg border-2 border-slate-200 relative overflow-hidden transition-all duration-500 overflow-x-auto">
             
             <!-- Range Indicator Bar -->
             <div id="range-indicator" class="hidden absolute top-0 left-0 w-full h-1 bg-slate-100 z-10">
@@ -161,50 +212,8 @@
             </div>
 
             <!-- The Grid -->
-            <div id="number-grid" class="grid gap-1 justify-center" style="grid-template-columns: repeat(9, 2.2rem);">
+            <div id="number-grid" class="grid gap-1 justify-center">
                 <!-- Numbers will be injected here -->
-            </div>
-        </div>
-
-        <!-- Input Area -->
-        <div id="input-section" class="w-full max-w-md transition-all duration-300">
-            
-            <!-- Feedback Message -->
-            <div id="feedback-msg" class="text-center font-bold text-base min-h-[1.5rem] mb-4 transition-colors duration-300 flex items-center justify-center gap-2 px-4 text-indigo-600">
-                <!-- Icon and Text injected via JS -->
-            </div>
-
-            <form onsubmit="game.handleCheck(event)" class="relative mb-2">
-                <div id="input-container" class="bg-white border-indigo-100 p-1.5 rounded-full shadow-xl border-2 flex items-center transition-colors">
-                    <input type="number" id="user-guess" placeholder="輸入數字..." class="flex-1 px-4 py-2 text-lg outline-none bg-transparent placeholder-slate-400 font-bold text-slate-700 disabled:text-slate-400">
-                    
-                    <!-- Submit Button -->
-                    <button type="submit" id="btn-submit" class="bg-indigo-600 hover:bg-indigo-700 text-white p-2.5 rounded-full shadow-md transition-all hover:scale-105 active:scale-95">
-                        <i data-lucide="check-circle" class="w-5 h-5"></i>
-                    </button>
-
-                    <!-- Status Badges (Hidden by default) -->
-                    <div id="status-badge-won" class="hidden bg-green-500 text-white px-4 py-2 rounded-full font-bold flex items-center gap-1.5 animate-pulse whitespace-nowrap text-sm sm:text-base">
-                        <i data-lucide="trophy" class="w-4 h-4"></i> 答對了！
-                    </div>
-                    <div id="status-badge-revealed" class="hidden bg-amber-500 text-white px-4 py-2 rounded-full font-bold flex items-center gap-1.5 whitespace-nowrap text-sm sm:text-base">
-                        <i data-lucide="x-circle" class="w-4 h-4"></i> <span id="reveal-text">答案: ?</span>
-                    </div>
-                    <div id="status-badge-exploded" class="hidden bg-rose-500 text-white px-4 py-2 rounded-full font-bold flex items-center gap-1.5 whitespace-nowrap text-sm sm:text-base">
-                        <i data-lucide="bomb" class="w-4 h-4"></i> BOOM
-                    </div>
-                </div>
-            </form>
-
-            <!-- Actions -->
-            <div id="action-area" class="text-center">
-                <button id="btn-giveup" onclick="game.handleGiveUp()" class="text-slate-400 hover:text-slate-600 text-xs sm:text-sm font-medium underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 transition-all">
-                    看答案
-                </button>
-                <!-- Modified: Button now resets the game entirely -->
-                <button id="btn-restart" onclick="game.resetGame()" class="hidden px-6 py-2.5 rounded-xl font-bold hover:shadow-lg transition-all transform hover:-translate-y-1 flex items-center gap-2 mx-auto text-sm sm:text-base text-white bg-slate-800 hover:bg-slate-700">
-                    <i data-lucide="refresh-cw" class="w-4 h-4"></i> 重新開始 (回到設定頁)
-                </button>
             </div>
         </div>
     </div>
@@ -250,7 +259,6 @@
                 <p id="explanation-tip" class="text-sm text-slate-500 italic">💡 知識點：即使有 1,000,000 個數字，用這個方法也只需要約 20 次就能找到目標！</p>
             </div>
 
-            <!-- Modified: Button now resets the game entirely -->
             <button onclick="game.resetGame()" class="w-full mt-6 bg-indigo-600 text-white py-3.5 rounded-xl font-bold hover:bg-indigo-700 hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2">
                 <i data-lucide="trophy" class="w-5 h-5"></i> <span id="modal-btn-text">我學會了，重新開始！</span>
             </button>
@@ -333,6 +341,9 @@
                 timerEl.classList.remove('hidden');
                 investigateControls.classList.add('hidden');
                 
+                // Hide stats initially during preview
+                document.getElementById('investigate-stats').classList.add('hidden');
+
                 this.renderGrid();
                 this.updateInputUI(); // Ensure input is disabled/clean during preview
                 this.showMessage('請把握 3 秒鐘觀察數字範圍！', 'info');
@@ -357,12 +368,16 @@
                 
                 document.getElementById('preview-timer').classList.add('hidden');
                 document.getElementById('investigate-controls').classList.remove('hidden');
+                document.getElementById('investigate-stats').classList.remove('hidden'); // Show stats now
                 
                 this.updateHeader();
                 this.updateInvestigateUI();
                 this.renderGrid();
                 this.updateInputUI(); // Enable input
-                this.showMessage('時間到！數字已隱藏，請開始使用二分搜尋法。', 'info');
+                
+                // Removed the message display as requested
+                this.showMessage('', '');
+                
                 lucide.createIcons();
             },
 
@@ -462,14 +477,6 @@
                 }
             },
 
-            handleGiveUp() {
-                this.state = 'revealed';
-                this.restoreNumber();
-                this.renderGrid();
-                this.updateInputUI();
-                this.showMessage(`答案是 ${this.missingNumber}！下次再接再厲！`, 'info');
-            },
-
             explode() {
                 this.state = 'exploded';
                 this.restoreNumber();
@@ -508,6 +515,7 @@
                 document.getElementById('explosion-overlay').classList.add('hidden');
                 document.getElementById('tutorial-modal').classList.add('hidden');
                 document.getElementById('range-indicator').classList.add('hidden');
+                document.getElementById('investigate-stats').classList.add('hidden'); // Hide stats on reset
                 
                 this.toggleScreen('setup');
                 this.showMessage('', '');
@@ -539,25 +547,23 @@
                 const rangeBar = document.getElementById('range-indicator');
 
                 if (this.isInvestigateMode) {
-                    btn.className = "flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-sm border-2 bg-rose-50 border-rose-300 text-rose-700 ring-2 ring-rose-200";
+                    btn.className = "flex-1 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-sm border-2 bg-rose-50 border-rose-300 text-rose-700 ring-2 ring-rose-200 h-full";
                     btn.innerHTML = `<i data-lucide="bomb" class="w-5 h-5 animate-pulse"></i> 偵探模式 (已開啟)`;
                     
                     btnBlind.classList.remove('hidden');
-                    stats.classList.remove('hidden');
                     rangeBar.classList.remove('hidden');
                     
                     document.getElementById('icon-blind').setAttribute('data-lucide', this.isBlindMode ? 'eye-off' : 'eye');
                     if (this.isBlindMode) {
-                        btnBlind.className = "px-3 rounded-xl border-2 flex items-center justify-center transition-all bg-slate-800 text-white border-slate-800";
+                        btnBlind.className = "px-4 rounded-xl border-2 flex items-center justify-center transition-all bg-slate-800 text-white border-slate-800 h-full";
                     } else {
-                        btnBlind.className = "px-3 rounded-xl border-2 flex items-center justify-center transition-all bg-white text-slate-400 border-slate-200";
+                        btnBlind.className = "px-4 rounded-xl border-2 flex items-center justify-center transition-all bg-white text-slate-400 border-slate-200 h-full";
                     }
                 } else {
-                    btn.className = "flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-sm border-2 bg-white border-slate-200 text-slate-600 hover:bg-slate-50";
+                    btn.className = "flex-1 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-sm border-2 bg-white border-slate-200 text-slate-600 hover:bg-slate-50 h-full";
                     btn.innerHTML = `<i data-lucide="search" class="w-5 h-5"></i> 開啟偵探線索模式`;
                     
                     btnBlind.classList.add('hidden');
-                    stats.classList.add('hidden');
                     rangeBar.classList.add('hidden');
                 }
                 this.updateInvestigateStats();
@@ -632,7 +638,7 @@
                 const badgeWon = document.getElementById('status-badge-won');
                 const badgeRev = document.getElementById('status-badge-revealed');
                 const badgeExp = document.getElementById('status-badge-exploded');
-                const btnGiveup = document.getElementById('btn-giveup');
+                // Removed btnGiveup reference
                 const btnRestart = document.getElementById('btn-restart');
                 
                 // 1. 強制隱藏所有標籤
@@ -647,20 +653,17 @@
                     input.disabled = false;
                     input.placeholder = "輸入數字...";
                     btnSubmit.classList.remove('hidden');
-                    btnGiveup.classList.remove('hidden');
                     btnRestart.classList.add('hidden');
                 } else if (isPreview) {
                     input.disabled = true;
                     input.placeholder = "記憶中...";
                     btnSubmit.classList.add('hidden');
-                    btnGiveup.classList.add('hidden');
                     btnRestart.classList.add('hidden');
                 } else {
                     // Game Over states (won, revealed, exploded)
                     input.disabled = true;
                     input.placeholder = "遊戲結束";
                     btnSubmit.classList.add('hidden');
-                    btnGiveup.classList.add('hidden');
                     btnRestart.classList.remove('hidden');
                     
                     // 只在狀態符合時才顯示對應標籤
@@ -677,7 +680,7 @@
             showMessage(text, type) {
                 const el = document.getElementById('feedback-msg');
                 el.innerText = text;
-                el.className = `text-center font-bold text-base min-h-[1.5rem] mb-4 transition-colors duration-300 flex items-center justify-center gap-2 px-4 animate-fade-in`;
+                el.className = `text-center font-bold text-base min-h-[1.5rem] mb-2 transition-colors duration-300 flex items-center justify-center gap-2 px-4 animate-fade-in`;
                 
                 if (type === 'success') el.classList.add('text-green-600');
                 else if (type === 'error') el.classList.add('text-rose-600');
@@ -691,7 +694,21 @@
                 const container = document.getElementById('number-grid');
                 container.innerHTML = '';
                 
+                // Set grid template with extra column for line number
+                // 3.5rem for line number, then 9 columns of 3.5rem
+                container.style.gridTemplateColumns = '3.5rem repeat(9, 3.5rem)'; 
+
+                let rowCount = 1;
+
                 this.numbers.forEach((num, idx) => {
+                    // Inject Row Number before the first element of each row
+                    if (idx % 9 === 0) {
+                        const rowNum = document.createElement('div');
+                        rowNum.className = "flex items-center justify-center text-slate-400 font-mono text-sm font-bold border-r-2 border-slate-100 mr-2";
+                        rowNum.innerText = rowCount++;
+                        container.appendChild(rowNum);
+                    }
+
                     const btn = document.createElement('button');
                     
                     // State Checks
@@ -706,8 +723,17 @@
                     }
                     btn.innerText = content;
                     
+                    // Responsive font size logic
+                    const str = content.toString();
+                    let fontSize = 'text-xl sm:text-2xl'; // Base size for 1-2 digits
+                    if (str.length === 3) fontSize = 'text-lg sm:text-xl';
+                    if (str.length === 4) fontSize = 'text-base sm:text-lg';
+                    if (str.length === 5) fontSize = 'text-sm sm:text-base';
+                    if (str.length === 6) fontSize = 'text-xs sm:text-sm';
+                    if (str.length >= 7) fontSize = 'text-[10px] sm:text-xs tracking-tighter';
+
                     // Base Classes
-                    let classes = "grid-btn aspect-square flex items-center justify-center text-sm sm:text-base font-bold rounded-md relative ";
+                    let classes = `grid-btn aspect-square flex items-center justify-center ${fontSize} font-bold rounded-md relative `;
                     
                     // Conditional Styling
                     if (this.state !== 'playing') btn.disabled = true;
