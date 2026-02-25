@@ -1,0 +1,431 @@
+import React, { useState, useEffect } from 'react';
+import { AlertCircle, CheckCircle2, Truck, Clock, Users, ArrowRight, Warehouse, Box, AlertTriangle } from 'lucide-react';
+import { initializeApp } from 'firebase/app';
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
+import { getFirestore, doc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+
+// --- Firebase 初始化設定 ---
+const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'dance-competition-app';
+
+// 1. 定義【後台】狀態選項
+const BACKSTAGE_OPTIONS = {
+  AVAILABLE: {
+    id: 'AVAILABLE',
+    label: '後台有空位 (可進場)',
+    shortLabel: '後台有空位',
+    color: 'bg-green-500',
+    borderColor: 'border-green-500',
+    icon: <CheckCircle2 className="w-10 h-10 text-white mb-1" />,
+    btnIcon: <CheckCircle2 className="w-6 h-6" />
+  },
+  MOVING: {
+    id: 'MOVING',
+    label: '道具搬運中 (請稍候)',
+    shortLabel: '道具搬運中',
+    color: 'bg-yellow-500',
+    borderColor: 'border-yellow-500',
+    icon: <Truck className="w-10 h-10 text-white mb-1" />,
+    btnIcon: <Truck className="w-6 h-6" />
+  },
+  FULL: {
+    id: 'FULL',
+    label: '後台已滿 (暫停進場)',
+    shortLabel: '後台已滿',
+    color: 'bg-red-500',
+    borderColor: 'border-red-500',
+    icon: <AlertCircle className="w-10 h-10 text-white mb-1" />,
+    btnIcon: <AlertCircle className="w-6 h-6" />
+  }
+};
+
+// 2. 定義【暫存區】狀態選項
+const STORAGE_OPTIONS = {
+  AVAILABLE: {
+    id: 'AVAILABLE',
+    label: '暫存區有空位 (可卸貨)',
+    shortLabel: '暫存有空位',
+    color: 'bg-emerald-500',
+    borderColor: 'border-emerald-500',
+    icon: <Box className="w-10 h-10 text-white mb-1" />,
+    btnIcon: <Box className="w-6 h-6" />
+  },
+  BUSY: {
+    id: 'BUSY',
+    label: '暫存區整理中 (稍候)',
+    shortLabel: '暫存整理中',
+    color: 'bg-amber-500',
+    borderColor: 'border-amber-500',
+    icon: <Warehouse className="w-10 h-10 text-white mb-1" />,
+    btnIcon: <Warehouse className="w-6 h-6" />
+  },
+  FULL: {
+    id: 'FULL',
+    label: '暫存區已滿 (暫停卸貨)',
+    shortLabel: '暫存區已滿',
+    color: 'bg-rose-600',
+    borderColor: 'border-rose-600',
+    icon: <AlertTriangle className="w-10 h-10 text-white mb-1" />,
+    btnIcon: <AlertTriangle className="w-6 h-6" />
+  }
+};
+
+export default function App() {
+  const [user, setUser] = useState(null);
+  const [statusData, setStatusData] = useState({
+    backstageStatus: 'AVAILABLE',
+    storageStatus: 'AVAILABLE',
+    currentTeam: '',
+    nextTeam: '',
+    lastUpdated: null
+  });
+  const [isEditingTeam, setIsEditingTeam] = useState(false);
+  const [editForm, setEditForm] = useState({ currentTeam: '', nextTeam: '' });
+  const [loading, setLoading] = useState(true);
+  
+  // 控制面板的頁籤 (backstage | storage)
+  const [controlTab, setControlTab] = useState('backstage');
+
+  // 1. 處理身份驗證
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (error) {
+        console.error("Auth error:", error);
+      }
+    };
+    initAuth();
+
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      if (!currentUser) setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // 2. 監聽 Firestore 即時資料
+  useEffect(() => {
+    if (!user) return;
+
+    const statusDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'propStatus', 'main-board');
+
+    const unsubscribe = onSnapshot(
+      statusDocRef,
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setStatusData({
+            backstageStatus: data.backstageStatus || data.currentStatus || 'AVAILABLE', // 相容舊資料
+            storageStatus: data.storageStatus || 'AVAILABLE',
+            currentTeam: data.currentTeam || '',
+            nextTeam: data.nextTeam || '',
+            lastUpdated: data.lastUpdated?.toDate() || new Date()
+          });
+        } else {
+          setDoc(statusDocRef, {
+            backstageStatus: 'AVAILABLE',
+            storageStatus: 'AVAILABLE',
+            currentTeam: '',
+            nextTeam: '',
+            lastUpdated: serverTimestamp()
+          });
+        }
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Firestore Error:", error);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [user]);
+
+  // 更新單一區域狀態
+  const updateAreaStatus = async (area, newStatusId) => {
+    if (!user) return;
+    const statusDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'propStatus', 'main-board');
+    try {
+      await setDoc(statusDocRef, {
+        [area === 'backstage' ? 'backstageStatus' : 'storageStatus']: newStatusId,
+        lastUpdated: serverTimestamp()
+      }, { merge: true });
+    } catch (error) {
+      console.error("Update failed:", error);
+    }
+  };
+
+  // 更新隊伍資訊
+  const handleSaveTeams = async () => {
+    if (!user) return;
+    const statusDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'propStatus', 'main-board');
+    try {
+      await setDoc(statusDocRef, {
+        currentTeam: editForm.currentTeam,
+        nextTeam: editForm.nextTeam,
+        lastUpdated: serverTimestamp()
+      }, { merge: true });
+      setIsEditingTeam(false);
+    } catch (error) {
+      console.error("Team update failed:", error);
+    }
+  };
+
+  // 格式化時間
+  const formatTime = (date) => {
+    if (!date) return '尚未更新';
+    return new Intl.DateTimeFormat('zh-TW', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    }).format(date);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="flex flex-col items-center">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <div className="text-lg font-bold text-gray-600">系統連線中...</div>
+        </div>
+      </div>
+    );
+  }
+
+  const activeBackstage = BACKSTAGE_OPTIONS[statusData.backstageStatus] || BACKSTAGE_OPTIONS.AVAILABLE;
+  const activeStorage = STORAGE_OPTIONS[statusData.storageStatus] || STORAGE_OPTIONS.AVAILABLE;
+
+  return (
+    <div className="min-h-screen bg-slate-100 pb-12 font-sans">
+      {/* 頂部導覽列 */}
+      <header className="bg-slate-900 text-white p-4 shadow-md sticky top-0 z-20">
+        <div className="max-w-md mx-auto flex justify-between items-center">
+          <h1 className="text-base font-bold tracking-wider flex items-center">
+            <Warehouse className="w-5 h-5 mr-2 text-blue-400" />
+            道具場控系統
+          </h1>
+          <div className="flex items-center text-xs bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-full shadow-inner">
+            <span className="w-2 h-2 rounded-full bg-green-400 mr-2 animate-pulse shadow-[0_0_5px_#4ade80]"></span>
+            即時連線
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-md mx-auto p-4 space-y-5 mt-2">
+        
+        {/* 雙重狀態顯示區 */}
+        <section className="grid grid-cols-2 gap-3">
+          {/* 後台狀態卡片 */}
+          <div className={`rounded-2xl shadow-lg overflow-hidden transition-all duration-300 ${activeBackstage.color} transform hover:scale-[1.02]`}>
+            <div className="p-4 flex flex-col items-center justify-center text-center h-36">
+              <div className="bg-black/10 p-2 rounded-full mb-2">
+                {activeBackstage.icon}
+              </div>
+              <h2 className="text-xl font-black text-white tracking-wide drop-shadow-md leading-tight">
+                {activeBackstage.shortLabel}
+              </h2>
+            </div>
+            <div className="bg-black/20 text-white/90 text-xs font-medium py-1.5 text-center backdrop-blur-sm">
+              📍 後台狀態
+            </div>
+          </div>
+
+          {/* 暫存區狀態卡片 */}
+          <div className={`rounded-2xl shadow-lg overflow-hidden transition-all duration-300 ${activeStorage.color} transform hover:scale-[1.02]`}>
+            <div className="p-4 flex flex-col items-center justify-center text-center h-36">
+              <div className="bg-black/10 p-2 rounded-full mb-2">
+                {activeStorage.icon}
+              </div>
+              <h2 className="text-xl font-black text-white tracking-wide drop-shadow-md leading-tight">
+                {activeStorage.shortLabel}
+              </h2>
+            </div>
+            <div className="bg-black/20 text-white/90 text-xs font-medium py-1.5 text-center backdrop-blur-sm">
+              📍 暫存區狀態
+            </div>
+          </div>
+        </section>
+
+        {/* 最後更新時間 */}
+        <div className="flex items-center justify-center text-xs font-medium text-gray-500 bg-gray-200/50 py-2 rounded-full">
+          <Clock className="w-3.5 h-3.5 mr-1.5" />
+          資料最後更新: {formatTime(statusData.lastUpdated)}
+        </div>
+
+        {/* 隊伍資訊區 */}
+        <section className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+          <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
+            <h3 className="text-lg font-bold text-gray-800 flex items-center">
+              <Users className="w-5 h-5 mr-2 text-blue-600" />
+              隊伍動線追蹤
+            </h3>
+            {!isEditingTeam ? (
+              <button 
+                onClick={() => {
+                  setEditForm({ currentTeam: statusData.currentTeam, nextTeam: statusData.nextTeam });
+                  setIsEditingTeam(true);
+                }}
+                className="text-sm bg-blue-50 text-blue-700 px-4 py-1.5 rounded-full font-bold hover:bg-blue-100 transition-colors active:scale-95"
+              >
+                編輯
+              </button>
+            ) : null}
+          </div>
+
+          {!isEditingTeam ? (
+            <div className="flex flex-col space-y-3">
+              <div className="flex items-center justify-between bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                <span className="text-slate-600 font-bold">目前在【後台】的隊伍</span>
+                <span className="text-2xl font-black text-slate-800">
+                  {statusData.currentTeam || '--'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between bg-blue-50 p-3.5 rounded-xl border border-blue-100">
+                <span className="text-blue-800 font-bold flex items-center">
+                  準備進場 (在暫存區)
+                </span>
+                <span className="text-2xl font-black text-blue-700 flex items-center">
+                   <ArrowRight className="w-5 h-5 mr-2 text-blue-400" />
+                  {statusData.nextTeam || '--'}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">目前在【後台】的隊伍編號</label>
+                <input 
+                  type="text" 
+                  value={editForm.currentTeam}
+                  onChange={(e) => setEditForm({...editForm, currentTeam: e.target.value})}
+                  className="w-full p-3.5 border-2 border-gray-200 rounded-xl focus:ring-0 focus:border-blue-500 outline-none text-lg font-bold text-center transition-colors"
+                  placeholder="輸入編號 (例: 101)"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">準備進場隊伍 (在暫存區)</label>
+                <input 
+                  type="text" 
+                  value={editForm.nextTeam}
+                  onChange={(e) => setEditForm({...editForm, nextTeam: e.target.value})}
+                  className="w-full p-3.5 border-2 border-gray-200 rounded-xl focus:ring-0 focus:border-blue-500 outline-none text-lg font-bold text-center transition-colors"
+                  placeholder="輸入編號 (例: 102)"
+                />
+              </div>
+              <div className="flex space-x-3 pt-2">
+                <button 
+                  onClick={() => setIsEditingTeam(false)}
+                  className="flex-1 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-colors"
+                >
+                  取消
+                </button>
+                <button 
+                  onClick={handleSaveTeams}
+                  className="flex-1 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition-colors active:scale-95"
+                >
+                  儲存更新
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* 狀態控制面板 (工作人員操作區) */}
+        <section className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+          {/* 頁籤切換 */}
+          <div className="flex border-b border-gray-200">
+            <button
+              onClick={() => setControlTab('backstage')}
+              className={`flex-1 py-3.5 text-sm font-bold text-center transition-colors flex items-center justify-center
+                ${controlTab === 'backstage' 
+                  ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-600' 
+                  : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}
+            >
+              📍 切換後台狀態
+            </button>
+            <button
+              onClick={() => setControlTab('storage')}
+              className={`flex-1 py-3.5 text-sm font-bold text-center transition-colors flex items-center justify-center
+                ${controlTab === 'storage' 
+                  ? 'bg-emerald-50 text-emerald-700 border-b-2 border-emerald-600' 
+                  : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}
+            >
+              📦 切換暫存區狀態
+            </button>
+          </div>
+
+          <div className="p-5">
+            {/* 後台控制按鈕 */}
+            {controlTab === 'backstage' && (
+              <div className="space-y-3 animate-in fade-in slide-in-from-left-2">
+                {Object.values(BACKSTAGE_OPTIONS).map((opt) => {
+                  const isActive = statusData.backstageStatus === opt.id;
+                  return (
+                    <button
+                      key={`bg-${opt.id}`}
+                      onClick={() => updateAreaStatus('backstage', opt.id)}
+                      className={`w-full py-4 px-5 rounded-xl font-bold text-lg flex items-center justify-between transition-all duration-200 active:scale-95
+                        ${isActive 
+                          ? `${opt.color} text-white shadow-md ring-2 ring-offset-2 ${opt.borderColor}` 
+                          : `bg-gray-50 text-gray-700 border-2 border-gray-200 hover:border-gray-300`
+                        }
+                      `}
+                    >
+                      <span className="flex items-center">
+                        <span className={`mr-3 ${isActive ? 'text-white' : opt.color.replace('bg-', 'text-')}`}>
+                          {opt.btnIcon}
+                        </span>
+                        {opt.label}
+                      </span>
+                      {isActive && <div className="w-2.5 h-2.5 bg-white rounded-full animate-ping"></div>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* 暫存區控制按鈕 */}
+            {controlTab === 'storage' && (
+              <div className="space-y-3 animate-in fade-in slide-in-from-right-2">
+                {Object.values(STORAGE_OPTIONS).map((opt) => {
+                  const isActive = statusData.storageStatus === opt.id;
+                  return (
+                    <button
+                      key={`st-${opt.id}`}
+                      onClick={() => updateAreaStatus('storage', opt.id)}
+                      className={`w-full py-4 px-5 rounded-xl font-bold text-lg flex items-center justify-between transition-all duration-200 active:scale-95
+                        ${isActive 
+                          ? `${opt.color} text-white shadow-md ring-2 ring-offset-2 ${opt.borderColor}` 
+                          : `bg-gray-50 text-gray-700 border-2 border-gray-200 hover:border-gray-300`
+                        }
+                      `}
+                    >
+                      <span className="flex items-center">
+                        <span className={`mr-3 ${isActive ? 'text-white' : opt.color.replace('bg-', 'text-')}`}>
+                          {opt.btnIcon}
+                        </span>
+                        {opt.label}
+                      </span>
+                      {isActive && <div className="w-2.5 h-2.5 bg-white rounded-full animate-ping"></div>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+
+      </main>
+    </div>
+  );
+}
