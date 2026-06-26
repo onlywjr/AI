@@ -1,15 +1,86 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <title>轉跳中...</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>正在轉跳...</title>
 
-    <!-- 0 秒後轉跳 -->
-    <meta http-equiv="refresh" content="0;https://gemini.google.com/share/5496b8516e59">
+<meta http-equiv="refresh" content="0;url=https://gemini.google.com/share/5496b8516e59">
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    background:#030617;
+    color:#fff;
+    font-family:"Segoe UI","Microsoft JhengHei",sans-serif;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    width:100vw;
+    height:100vh;
+}
+
+.container{
+    text-align:center;
+    padding:50px 60px;
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:22px;
+    backdrop-filter:blur(12px);
+    box-shadow:0 10px 40px rgba(0,0,0,.45);
+}
+
+h1{
+    font-size:32px;
+    margin-bottom:16px;
+}
+
+p{
+    color:#b8bfd4;
+    font-size:17px;
+    margin-bottom:36px;
+    line-height:1.7;
+}
+
+.btn{
+    display:inline-block;
+    text-decoration:none;
+    padding:15px 38px;
+    border-radius:999px;
+    color:white;
+    font-size:17px;
+    font-weight:600;
+    background:linear-gradient(135deg,#4f8cff,#6c63ff);
+    box-shadow:0 10px 25px rgba(79,140,255,.35);
+    transition:.25s;
+}
+
+.btn:hover{
+    transform:translateY(-3px);
+    box-shadow:0 18px 35px rgba(79,140,255,.5);
+}
+</style>
 </head>
+
 <body>
-    <p>正在轉跳，若未自動跳轉，請點擊：
-        <a href="https://gemini.google.com/share/5496b8516e59">前往目標頁面</a>
+
+<div class="container">
+    <h1>🚀 正在為您轉跳...</h1>
+
+    <p>
+        如果沒有自動轉跳，請點擊下方按鈕。
     </p>
+
+    <a class="btn"
+       href="https://gemini.google.com/share/5496b8516e59">
+        前往目標頁面 →
+    </a>
+</div>
+
 </body>
 </html>
