@@ -26,11 +26,13 @@
       };
     </script>
   </head>
-  <!-- 將原本 body 與捲軸的樣式全數改用 Tailwind Arbitrary variants 處理 -->
+  <!-- 1. 將 body 改為手機版自然延伸 (min-h-screen)，電腦版維持鎖定高度 (md:h-screen md:overflow-hidden) -->
   <body
-    class="flex flex-col md:flex-row h-screen overflow-hidden antialiased selection:bg-sky-200 selection:text-sky-900 font-sans bg-[#f5f5f4] text-[#292524] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-[#f5f5f4] [&::-webkit-scrollbar-thumb]:bg-[#d6d3d1] [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb:hover]:bg-[#a8a29e]">
+    class="flex flex-col md:flex-row min-h-screen md:h-screen md:overflow-hidden antialiased selection:bg-sky-200 selection:text-sky-900 font-sans bg-[#f5f5f4] text-[#292524] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-[#f5f5f4] [&::-webkit-scrollbar-thumb]:bg-[#d6d3d1] [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb:hover]:bg-[#a8a29e]">
+    
+    <!-- 2. 將 nav 增加手機版置頂 (sticky top-0 z-30)，確保往下捲動時選單不會消失 -->
     <nav
-      class="w-full md:w-48 bg-white border-b md:border-r border-stone-200 flex flex-col z-20 shrink-0 shadow-sm">
+      class="sticky top-0 md:relative w-full md:w-48 bg-white border-b md:border-r border-stone-200 flex flex-col z-30 shrink-0 shadow-sm">
       <div class="p-5 border-b border-stone-200">
         <h1
           class="text-xl font-black text-stone-800 tracking-tight leading-tight">
@@ -75,8 +77,9 @@
       </div>
     </nav>
 
+    <!-- 3. 將 main 的捲軸設定限制在電腦版 (md:overflow-y-auto)，手機版交由 body 原生捲動 -->
     <main
-      class="flex-1 overflow-y-auto bg-stone-50 p-4 md:p-8 lg:p-12 relative">
+      class="flex-1 md:overflow-y-auto bg-stone-50 p-4 md:p-8 lg:p-12 relative">
       <div
         id="sec-overview"
         class="max-w-5xl mx-auto animate-fade-in sec-content">
