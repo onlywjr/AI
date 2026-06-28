@@ -1,0 +1,1094 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quant Narrative Risk Engine (QNRE)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+      rel="stylesheet" />
+    <style>
+      body {
+        font-family: "Noto Sans TC", sans-serif;
+        background-color: #f5f5f4;
+        color: #292524;
+      }
+      .chart-container {
+        position: relative;
+        width: 100%;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+        height: 300px;
+        max-height: 400px;
+      }
+      @media (min-width: 768px) {
+        .chart-container {
+          height: 380px;
+        }
+      }
+      .nav-active {
+        background-color: #e0f2fe;
+        color: #0369a1;
+        font-weight: 700;
+        border-right: 4px solid #0284c7;
+      }
+      .tab-active {
+        border-bottom: 2px solid #0284c7;
+        color: #0284c7;
+        font-weight: 700;
+      }
+      .fade-in {
+        animation: fadeIn 0.3s ease-in-out;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f5f5f4;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #d6d3d1;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #a8a29e;
+      }
+    </style>
+  </head>
+  <body
+    class="flex flex-col md:flex-row h-screen overflow-hidden antialiased selection:bg-sky-200 selection:text-sky-900">
+    <!-- Chosen Palette: Warm Neutrals (Stone) with Calm Accents (Sky Blue, Emerald, Amber) -->
+    <!-- Application Structure Plan: The SPA uses a sidebar navigation to break down the presentation into five digestible sections: Overview, Data & Tech, Valuation Engine, Allocation & AI, and a new Operation Guide. This prevents information overload. Interactive charts (Chart.js) demonstrate dynamic EPS weighting and MEVM probability decay. The new Operation Guide section provides manual UI instructions and image placeholders. -->
+    <!-- Visualization & Content Choices: 1. Overview: Text/Cards -> Goal: Summarize -> Method: Styled HTML grids. 2. EPS Engine: Dynamic Weights -> Goal: Compare/Change -> Method: Stacked Bar Chart (Chart.js) with toggle. 3. MEVM: Risk Probability -> Goal: Inform/Change -> Method: Line Chart (Chart.js) showing exponential decay. 4. Guide: Instructions -> Goal: Educate -> Method: 2-column grid with text and dashed image placeholders. NO SVG/Mermaid used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <nav
+      class="w-full md:w-64 bg-white border-b md:border-r border-stone-200 flex flex-col z-20 shrink-0 shadow-sm">
+      <div class="p-5 border-b border-stone-200">
+        <h1
+          class="text-xl font-black text-stone-800 tracking-tight leading-tight">
+          QNRE <br /><span class="text-sm font-medium text-stone-500"
+            >量化敘事風險引擎</span
+          >
+        </h1>
+      </div>
+      <div
+        class="flex flex-row md:flex-col overflow-x-auto md:overflow-visible py-2 md:py-4 gap-1 px-3">
+        <button
+          onclick="nav('overview')"
+          id="nav-overview"
+          class="nav-active flex items-center gap-2 px-4 py-3 text-sm rounded-lg whitespace-nowrap transition-colors text-stone-600 hover:bg-stone-100">
+          <span>🧭</span> 系統概覽
+        </button>
+        <button
+          onclick="nav('data')"
+          id="nav-data"
+          class="flex items-center gap-2 px-4 py-3 text-sm rounded-lg whitespace-nowrap transition-colors text-stone-600 hover:bg-stone-100">
+          <span>📡</span> 數據與雷達
+        </button>
+        <button
+          onclick="nav('valuation')"
+          id="nav-valuation"
+          class="flex items-center gap-2 px-4 py-3 text-sm rounded-lg whitespace-nowrap transition-colors text-stone-600 hover:bg-stone-100">
+          <span>⚙️</span> 核心估值模型
+        </button>
+        <button
+          onclick="nav('allocation')"
+          id="nav-allocation"
+          class="flex items-center gap-2 px-4 py-3 text-sm rounded-lg whitespace-nowrap transition-colors text-stone-600 hover:bg-stone-100">
+          <span>🧠</span> 部位與AI洞察
+        </button>
+        <!-- 👇 新增：系統操作指引導航按鈕 -->
+        <button
+          onclick="nav('guide')"
+          id="nav-guide"
+          class="flex items-center gap-2 px-4 py-3 text-sm rounded-lg whitespace-nowrap transition-colors text-stone-600 hover:bg-stone-100">
+          <span>📖</span> 系統操作指引
+        </button>
+      </div>
+    </nav>
+
+    <main
+      class="flex-1 overflow-y-auto bg-stone-50 p-4 md:p-8 lg:p-12 relative">
+      <div id="sec-overview" class="max-w-5xl mx-auto fade-in">
+        <div class="mb-10 text-center md:text-left">
+          <span
+            class="inline-block py-1 px-3 rounded-full bg-sky-100 text-sky-800 text-xs font-bold tracking-widest mb-3"
+            >SYSTEM ARCHITECTURE</span
+          >
+          <h2
+            class="text-3xl md:text-5xl font-black text-stone-800 mb-4 leading-tight">
+            融合基本面、市場反身性與 <br class="hidden md:block" />AI
+            洞察的量化估值系統
+          </h2>
+          <p class="text-lg text-stone-600 max-w-3xl leading-relaxed">
+            不只計算「應該值多少」，更要破解「市場正在交易什麼夢想」。評估企業合理價值，並量化市場預期與情緒溢價。
+          </p>
+        </div>
+
+        <div
+          class="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm mb-10 border-l-4 border-l-amber-400">
+          <h3
+            class="text-lg font-bold text-stone-800 mb-3 flex items-center gap-2">
+            <span>💡</span> 投資人的核心痛點提問
+          </h3>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="bg-stone-50 p-4 rounded-xl text-stone-700 italic">
+              「這檔股票現在到底值多少錢？」
+            </div>
+            <div class="bg-stone-50 p-4 rounded-xl text-stone-700 italic">
+              「市場現在是在瘋狂炒夢想，還是真實反映基本面？」
+            </div>
+            <div class="bg-stone-50 p-4 rounded-xl text-stone-700 italic">
+              「從看數據、估算價值到決定買賣，這套系統怎麼幫我？」
+            </div>
+          </div>
+        </div>
+
+        <h3 class="text-2xl font-bold text-stone-800 mb-6">系統三大架構總覽</h3>
+        <div class="grid md:grid-cols-3 gap-6">
+          <div
+            class="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm hover:shadow-md transition-shadow">
+            <div class="text-3xl mb-4">📡</div>
+            <h4 class="text-lg font-bold text-stone-800 mb-2">
+              區塊一：基本資料與技術指標
+            </h4>
+            <p class="text-sm text-stone-600 leading-relaxed">
+              數據基石、籌碼透視、跨週期技術訊號探測與 AI 短線解讀。
+            </p>
+          </div>
+          <div
+            class="bg-sky-50 p-6 rounded-2xl border border-sky-100 shadow-sm hover:shadow-md transition-shadow ring-1 ring-sky-500/20">
+            <div class="text-3xl mb-4">⚙️</div>
+            <h4 class="text-lg font-bold text-sky-900 mb-2">
+              區塊二：估價模型 (估值核心)
+            </h4>
+            <ul class="text-sm text-sky-800 leading-relaxed space-y-1">
+              <li>① 盈餘計量</li>
+              <li>② 本益比擴張與限價</li>
+              <li>③ 結構定價</li>
+              <li>④ 最終定價判定</li>
+              <li>⑤ 市場預期驗證(MEVM)</li>
+            </ul>
+          </div>
+          <div
+            class="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm hover:shadow-md transition-shadow">
+            <div class="text-3xl mb-4">🧠</div>
+            <h4 class="text-lg font-bold text-stone-800 mb-2">
+              區塊三：資金配置與 AI 分析
+            </h4>
+            <p class="text-sm text-stone-600 leading-relaxed">
+              依據位階進行部位控管，並結合大語言模型提供質性操作指引。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div id="sec-data" class="max-w-5xl mx-auto hidden fade-in">
+        <div class="mb-8">
+          <h2 class="text-3xl font-black text-stone-800 mb-2">
+            基本資料與技術雷達
+          </h2>
+          <p class="text-stone-600">
+            全方位數據掃描與動態技術戰術 (1~14天視角)
+          </p>
+        </div>
+
+        <div
+          class="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm mb-8 border-l-4 border-l-amber-400">
+          <h3
+            class="text-md font-bold text-stone-800 mb-2 flex items-center gap-2">
+            <span>💡</span> 核心提問
+          </h3>
+          <p class="text-stone-700 italic text-sm">
+            「短線到底該看哪個指標最準？」 /
+            「主力跟法人現在是偷偷上車還是準備倒貨？」
+          </p>
+        </div>
+
+        <div
+          class="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden mb-8">
+          <div class="p-5 border-b border-stone-100 bg-stone-50">
+            <h3 class="font-bold text-stone-800">基礎數據涵蓋 (Data Radar)</h3>
+          </div>
+          <div class="p-5 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div class="p-3 bg-stone-50 rounded-lg">
+              <div class="text-xs text-stone-500 mb-1">獲利基礎</div>
+              <div class="font-bold text-stone-700">EPS</div>
+            </div>
+            <div class="p-3 bg-stone-50 rounded-lg">
+              <div class="text-xs text-stone-500 mb-1">成長潛力</div>
+              <div class="font-bold text-stone-700">營收動能 (RMS)</div>
+            </div>
+            <div class="p-3 bg-stone-50 rounded-lg">
+              <div class="text-xs text-stone-500 mb-1">獲利品質</div>
+              <div class="font-bold text-stone-700">營業現金流 (OCF)</div>
+            </div>
+            <div class="p-3 bg-stone-50 rounded-lg">
+              <div class="text-xs text-stone-500 mb-1">籌碼流向</div>
+              <div class="font-bold text-stone-700">法人/融資券</div>
+            </div>
+          </div>
+        </div>
+
+        <h3 class="text-xl font-bold text-stone-800 mb-4">
+          動態技術指標模組 (依大盤季線乖離率指派)
+        </h3>
+        <div class="grid md:grid-cols-3 gap-5 mb-8">
+          <div
+            class="bg-white border border-stone-200 rounded-xl p-5 shadow-sm relative overflow-hidden">
+            <div class="absolute top-0 right-0 p-3 opacity-10 text-4xl">📈</div>
+            <h4 class="font-bold text-sky-700 mb-2">MACD</h4>
+            <p class="text-sm text-stone-600 mb-3">
+              趨勢段的主升與初跌波段判定。
+            </p>
+            <div class="text-xs bg-sky-50 text-sky-800 p-2 rounded">
+              適用：明顯趨勢形成時
+            </div>
+          </div>
+          <div
+            class="bg-white border border-stone-200 rounded-xl p-5 shadow-sm relative overflow-hidden">
+            <div class="absolute top-0 right-0 p-3 opacity-10 text-4xl">📉</div>
+            <h4 class="font-bold text-emerald-700 mb-2">RSI</h4>
+            <p class="text-sm text-stone-600 mb-3">
+              於極度過熱或超跌區域，探測頂/底背離轉折。
+            </p>
+            <div class="text-xs bg-emerald-50 text-emerald-800 p-2 rounded">
+              適用：乖離過大、極端行情
+            </div>
+          </div>
+          <div
+            class="bg-white border border-stone-200 rounded-xl p-5 shadow-sm relative overflow-hidden">
+            <div class="absolute top-0 right-0 p-3 opacity-10 text-4xl">📊</div>
+            <h4 class="font-bold text-indigo-700 mb-2">KD</h4>
+            <p class="text-sm text-stone-600 mb-3">
+              盤整震盪期執行箱型操作，啟動高檔鈍化防護。
+            </p>
+            <div class="text-xs bg-indigo-50 text-indigo-800 p-2 rounded">
+              適用：無明顯趨勢、區間震盪
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-stone-800 text-stone-100 p-6 rounded-2xl shadow-lg">
+          <h4 class="font-bold mb-2 flex items-center gap-2">
+            <span class="text-xl">🤖</span> AI 短線戰術指引
+          </h4>
+          <p class="text-sm text-stone-300">
+            整合技術面波峰/交叉訊號與短線籌碼動能，交由 AI
+            輸出具體的短線防守點位與進出建議。
+          </p>
+        </div>
+      </div>
+
+      <div id="sec-valuation" class="max-w-5xl mx-auto hidden fade-in">
+        <div
+          class="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <h2 class="text-3xl font-black text-stone-800 mb-2">
+              核心估值模型
+            </h2>
+            <p class="text-stone-600">從基本面基底到市場情緒溢價的精確推算</p>
+          </div>
+        </div>
+
+        <div
+          class="flex overflow-x-auto border-b border-stone-200 mb-6 gap-6 no-scrollbar">
+          <button
+            onclick="valTab('eps')"
+            id="tab-eps"
+            class="tab-active pb-3 text-sm font-medium whitespace-nowrap transition-colors text-stone-500 hover:text-stone-800">
+            ① 盈餘計量 (EPS)
+          </button>
+          <button
+            onclick="valTab('pe')"
+            id="tab-pe"
+            class="pb-3 text-sm font-medium whitespace-nowrap transition-colors text-stone-500 hover:text-stone-800">
+            ② 本益比擴張與限價
+          </button>
+          <button
+            onclick="valTab('floor')"
+            id="tab-floor"
+            class="pb-3 text-sm font-medium whitespace-nowrap transition-colors text-stone-500 hover:text-stone-800">
+            ③ 結構定價 (保底)
+          </button>
+          <button
+            onclick="valTab('pricing')"
+            id="tab-pricing"
+            class="pb-3 text-sm font-medium whitespace-nowrap transition-colors text-stone-500 hover:text-stone-800">
+            ④ 最終定價判定
+          </button>
+          <button
+            onclick="valTab('mevm')"
+            id="tab-mevm"
+            class="pb-3 text-sm font-medium whitespace-nowrap transition-colors text-stone-500 hover:text-stone-800">
+            ⑤ 風險分析 (MEVM)
+          </button>
+        </div>
+
+        <div id="v-eps" class="fade-in">
+          <div
+            class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm mb-6 border-l-4 border-l-amber-400">
+            <p class="text-stone-700 italic text-sm">
+              💡 「公司明年到底能賺多少錢？」 /
+              「如果大盤突然崩跌，這個獲利預估扛得住嗎？」
+            </p>
+          </div>
+          <h3 class="text-xl font-bold text-stone-800 mb-4">
+            滾動歷史與預估趨勢之動態權重
+          </h3>
+          <div class="grid md:grid-cols-2 gap-6 mb-6">
+            <div class="bg-white p-5 rounded-xl border border-stone-200">
+              <h4 class="font-bold text-stone-700 mb-2 border-b pb-2">
+                Rolling (近四季EPS)
+              </h4>
+              <p class="text-sm text-stone-600">
+                已實現的歷史獲利基準。提供最真實的獲利底氣證明。
+              </p>
+            </div>
+            <div class="bg-white p-5 rounded-xl border border-stone-200">
+              <h4 class="font-bold text-stone-700 mb-2 border-b pb-2">
+                Trend (預估趨勢EPS)
+              </h4>
+              <p class="text-sm text-stone-600">
+                以最新單季獲利為基底，加乘「營收動能 (RMS)」推估未來爆發力。
+              </p>
+            </div>
+          </div>
+
+          <div
+            class="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm">
+            <div class="flex justify-between items-center mb-4">
+              <h4 class="font-bold text-stone-800">產業動態權重切換展示</h4>
+              <button
+                onclick="toggleRecession()"
+                class="px-3 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold rounded border border-stone-300 transition-colors">
+                切換: 大盤跌破年線 (景氣逆風)
+              </button>
+            </div>
+            <p id="eps-status-text" class="text-sm text-stone-500 mb-4">
+              目前狀態：正常市場。科技股側重趨勢預估，金融股側重歷史實績。
+            </p>
+            <div class="chart-container">
+              <canvas id="epsChart"></canvas>
+            </div>
+            <div
+              class="mt-4 p-3 bg-rose-50 text-rose-800 text-xs rounded border border-rose-100 flex gap-2">
+              <span class="text-base">⚠️</span>
+              <div>
+                <strong>波動率折價保護：</strong> 歷史獲利變異係數 (CV)
+                過高時，系統會自動對預估 EPS
+                進行折價，避免高波動帶來的過度樂觀。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="v-pe" class="hidden fade-in">
+          <div
+            class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm mb-6 border-l-4 border-l-amber-400">
+            <p class="text-stone-700 italic text-sm">
+              💡 「為什麼有些股票本益比可以衝到30倍，有些只能給10倍？」 /
+              「上漲天花板極限在哪？」
+            </p>
+          </div>
+
+          <div class="space-y-4">
+            <div
+              class="bg-white border border-stone-200 rounded-xl p-5 flex flex-col md:flex-row gap-4 items-center shadow-sm">
+              <div
+                class="w-12 h-12 bg-sky-100 text-sky-700 rounded-full flex items-center justify-center font-black text-xl shrink-0">
+                1
+              </div>
+              <div class="flex-1">
+                <h4 class="font-bold text-stone-800 mb-1">
+                  RTS 企業結構轉換 (PE 躍升)
+                </h4>
+                <p class="text-sm text-stone-600">
+                  評估獲利穩定度、營收轉型度、週期脫鉤度。總分達標即觸發估值層級調升
+                  (如 C級升至 B級)，重新錨定估值區間。
+                </p>
+              </div>
+            </div>
+            <div class="flex justify-center text-stone-400">▼ 疊加</div>
+            <div
+              class="bg-white border border-stone-200 rounded-xl p-5 flex flex-col md:flex-row gap-4 items-center shadow-sm">
+              <div
+                class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center font-black text-xl shrink-0">
+                2
+              </div>
+              <div class="flex-1">
+                <h4 class="font-bold text-stone-800 mb-1">
+                  市場情緒因子 (情緒溢價)
+                </h4>
+                <ul class="text-sm text-stone-600 list-disc list-inside ml-2">
+                  <li>
+                    <strong>題材熱度 (NHI):</strong> 量能、板塊溢價與當沖率。
+                  </li>
+                  <li><strong>資金籌碼:</strong> 法人流向與外資持股變化。</li>
+                  <li>
+                    <strong>綜合反身性:</strong>
+                    量化軋空動能、斷頭壓力、法人連買的加乘效應。
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="flex justify-center text-stone-400">▼ 受制於</div>
+            <div
+              class="bg-white border border-stone-200 rounded-xl p-5 flex flex-col md:flex-row gap-4 items-center shadow-sm border-l-4 border-l-rose-400">
+              <div
+                class="w-12 h-12 bg-rose-100 text-rose-700 rounded-full flex items-center justify-center font-black text-xl shrink-0">
+                3
+              </div>
+              <div class="flex-1">
+                <h4 class="font-bold text-rose-800 mb-1">
+                  MCF 市場上限壓制 (絕對天花板)
+                </h4>
+                <p class="text-sm text-stone-600">
+                  當大盤嚴重乖離(過熱)或資金退潮時，強制收縮個股的本益比天花板，避免在市場極度樂觀時給出不合理的目標價。
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="v-floor" class="hidden fade-in">
+          <div
+            class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm mb-6 border-l-4 border-l-amber-400">
+            <p class="text-stone-700 italic text-sm">
+              💡 「萬一題材破滅大崩盤，股價最慘會跌到哪裡？」 /
+              「跌到哪裡會有存股族護盤？」
+            </p>
+          </div>
+          <p class="text-stone-600 mb-6">
+            計算失去成長動能時，股價的下檔價值支撐。此模型非用於預測上漲，而是精算大盤修正時的絕對防禦底線。
+          </p>
+
+          <div class="grid md:grid-cols-2 gap-6">
+            <div
+              class="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
+              <div class="bg-stone-100 p-4 border-b border-stone-200">
+                <h4
+                  class="font-bold text-stone-800 text-lg flex items-center gap-2">
+                  <span>🏢</span> 資產錨 (清算價值)
+                </h4>
+              </div>
+              <div class="p-6">
+                <div
+                  class="text-sm text-stone-600 mb-4 bg-stone-50 p-3 rounded">
+                  每股淨值 × 產業歷史合理 P/B
+                </div>
+                <p class="text-sm text-stone-600">
+                  代表公司的清算帳面價值底線。在市場極度恐慌、失去所有成長預期時，資產價值將成為最後的定價基準。
+                </p>
+              </div>
+            </div>
+            <div
+              class="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
+              <div class="bg-stone-100 p-4 border-b border-stone-200">
+                <h4
+                  class="font-bold text-stone-800 text-lg flex items-center gap-2">
+                  <span>💰</span> 股息錨 (殖利率支撐)
+                </h4>
+              </div>
+              <div class="p-6">
+                <div
+                  class="text-sm text-stone-600 mb-4 bg-stone-50 p-3 rounded">
+                  股息 ÷ 無風險要求報酬率
+                </div>
+                <p class="text-sm text-stone-600">
+                  代表殖利率型投資人的買盤支撐。當股價跌至特定水準，使其殖利率高於要求報酬時，將吸引長期資金進場。
+                </p>
+              </div>
+            </div>
+          </div>
+          <div
+            class="mt-6 p-4 bg-sky-50 border border-sky-100 rounded-xl text-sm text-sky-800 flex items-start gap-3">
+            <span class="text-xl">ℹ️</span>
+            <div>
+              <strong>微調因子：</strong>
+              最終底線會依據市場成交熱度進行「流動性折價/溢價」，並針對具作帳能力的公司疊加「集團溢價」。
+            </div>
+          </div>
+        </div>
+
+        <div id="v-pricing" class="hidden fade-in">
+          <div
+            class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm mb-6 border-l-4 border-l-amber-400">
+            <p class="text-stone-700 italic text-sm">
+              💡 「短、中、長期的合理價各是多少？」 /
+              「我現在進場會不會買貴了？」
+            </p>
+          </div>
+          <h3 class="text-xl font-bold text-stone-800 mb-4">
+            預估年化 EPS × 最終判定本益比 = 三維度時間矩陣
+          </h3>
+
+          <div
+            class="overflow-x-auto bg-white rounded-xl border border-stone-200 shadow-sm">
+            <table class="w-full text-left text-sm">
+              <thead
+                class="bg-stone-50 text-stone-600 border-b border-stone-200">
+                <tr>
+                  <th class="p-4 font-bold">時間維度</th>
+                  <th class="p-4 font-bold">主導因素</th>
+                  <th class="p-4 font-bold">核心邏輯與機制</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-stone-100">
+                <tr class="hover:bg-stone-50 transition-colors">
+                  <td class="p-4 font-bold text-sky-700 whitespace-nowrap">
+                    短期 (1~3個月)
+                  </td>
+                  <td class="p-4 text-stone-700">情緒與流動性</td>
+                  <td class="p-4 text-stone-600">
+                    受制於大盤短期情緒。若遇極端籌碼風險(高當沖、融券異常、OCF負值)將觸發「短期高風險壓制」。
+                  </td>
+                </tr>
+                <tr class="hover:bg-stone-50 transition-colors">
+                  <td class="p-4 font-bold text-indigo-700 whitespace-nowrap">
+                    中期 (3~6個月)
+                  </td>
+                  <td class="p-4 text-stone-700">預估EPS + MCF壓制</td>
+                  <td class="p-4 text-stone-600">
+                    核心定價錨點。反映預估 EPS 與大盤限價機制後的合理估值。
+                  </td>
+                </tr>
+                <tr class="hover:bg-stone-50 transition-colors">
+                  <td class="p-4 font-bold text-emerald-700 whitespace-nowrap">
+                    長期 (6~12個月)
+                  </td>
+                  <td class="p-4 text-stone-700">基本面結構定價 (RTS)</td>
+                  <td class="p-4 text-stone-600">
+                    濾除短期情緒與籌碼干擾，回歸企業質變的本質定價。
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="v-mevm" class="hidden fade-in">
+          <div
+            class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm mb-6 border-l-4 border-l-amber-400">
+            <p class="text-stone-700 italic text-sm">
+              💡 「現在的股價，是不是已經把未來幾年的獲利都算進去了？」 /
+              「買在這個價位，勝率還剩多少？」
+            </p>
+          </div>
+
+          <div class="grid md:grid-cols-3 gap-6 mb-6">
+            <div
+              class="md:col-span-1 bg-stone-800 text-white p-6 rounded-2xl shadow-lg flex flex-col justify-center">
+              <h4 class="text-lg font-bold text-amber-400 mb-3">
+                逆向預期驗證
+              </h4>
+              <p class="text-sm text-stone-300 leading-relaxed mb-4">
+                傳統估值：<br /><span class="text-stone-400"
+                  >EPS × PE = 推算合理價</span
+                >
+              </p>
+              <p class="text-sm text-stone-100 leading-relaxed font-bold">
+                MEVM 引擎：<br /><span class="text-sky-300"
+                  >「當前股價」反推 ➔ 「市場隱含目標 EPS」</span
+                >
+              </p>
+              <p
+                class="text-xs text-stone-400 mt-4 pt-4 border-t border-stone-700">
+                精算目前股價透支了未來多少季的獲利。
+              </p>
+            </div>
+
+            <div
+              class="md:col-span-2 bg-white p-6 rounded-2xl border border-stone-200 shadow-sm">
+              <h4 class="font-bold text-stone-800 mb-2">
+                實現機率評估 (基準率謬誤指數衰減)
+              </h4>
+              <p class="text-sm text-stone-600 mb-4">
+                預估反映時間越長，完美達標不失誤的機率呈指數衰減。當勝率低於安全閾值，系統判定為「嚴重透支未來」。
+              </p>
+              <div class="chart-container">
+                <canvas id="mevmChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="sec-allocation" class="max-w-5xl mx-auto hidden fade-in">
+        <div class="mb-8">
+          <h2 class="text-3xl font-black text-stone-800 mb-2">
+            部位配置與 AI 洞察
+          </h2>
+          <p class="text-stone-600">從風險量化到質性戰術指引</p>
+        </div>
+
+        <div
+          class="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm mb-8 border-l-4 border-l-amber-400">
+          <h3
+            class="text-md font-bold text-stone-800 mb-2 flex items-center gap-2">
+            <span>💡</span> 核心提問
+          </h3>
+          <p class="text-stone-700 italic text-sm">
+            「大盤現在安全嗎？該All-in還是見好就收？」 /
+            「最近的利多新聞是真的還是炒作？」
+          </p>
+        </div>
+
+        <h3
+          class="text-xl font-bold text-stone-800 mb-4 flex items-center gap-2">
+          <span>🛡️</span> 六階梯資金配置矩陣
+        </h3>
+        <p class="text-sm text-stone-600 mb-4">
+          取代單一重倉或清倉策略，依據大盤/個股乖離率動態切分資金位階。
+        </p>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-10">
+          <div
+            class="bg-rose-50 border border-rose-200 p-3 rounded-lg text-center">
+            <div class="text-rose-800 font-bold text-sm">獲利了結</div>
+            <div class="text-xs text-rose-600 mt-1">極度乖離過熱</div>
+          </div>
+          <div
+            class="bg-orange-50 border border-orange-200 p-3 rounded-lg text-center">
+            <div class="text-orange-800 font-bold text-sm">停止追價</div>
+            <div class="text-xs text-orange-600 mt-1">偏高警戒區</div>
+          </div>
+          <div
+            class="bg-stone-50 border border-stone-200 p-3 rounded-lg text-center">
+            <div class="text-stone-800 font-bold text-sm">試單佈局</div>
+            <div class="text-xs text-stone-600 mt-1">合理震盪區</div>
+          </div>
+          <div
+            class="bg-sky-50 border border-sky-200 p-3 rounded-lg text-center">
+            <div class="text-sky-800 font-bold text-sm">恐慌加碼</div>
+            <div class="text-xs text-sky-600 mt-1">超跌便宜區</div>
+          </div>
+          <div
+            class="bg-indigo-50 border border-indigo-200 p-3 rounded-lg text-center">
+            <div class="text-indigo-800 font-bold text-sm">重倉買進</div>
+            <div class="text-xs text-indigo-600 mt-1">極度超值區</div>
+          </div>
+          <div
+            class="bg-emerald-50 border border-emerald-200 p-3 rounded-lg text-center">
+            <div class="text-emerald-800 font-bold text-sm">危機入市</div>
+            <div class="text-xs text-emerald-600 mt-1">破年線恐慌底</div>
+          </div>
+        </div>
+
+        <h3
+          class="text-xl font-bold text-stone-800 mb-4 flex items-center gap-2">
+          <span>🧠</span> AI 質性深度解讀 (Insights)
+        </h3>
+        <div
+          class="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden flex flex-col md:flex-row">
+          <div
+            class="bg-stone-800 text-stone-300 p-6 md:w-1/3 flex flex-col justify-center">
+            <div class="text-xs font-mono text-stone-400 mb-2">
+              // Data Payload
+            </div>
+            <ul class="space-y-2 text-sm">
+              <li>✔️ RTS 結構得分</li>
+              <li>✔️ MEVM 破滅機率</li>
+              <li>✔️ 技術面轉折警示</li>
+              <li>✔️ 聯網新聞與法說會</li>
+            </ul>
+            <div class="mt-4 pt-4 border-t border-stone-700 text-xs">
+              <span class="text-amber-400 font-bold">嚴謹約束：</span> AI
+              強制檢核「本業衰退與業外收益」。若量化指標現高風險，優先提示減碼。
+            </div>
+          </div>
+          <div class="p-6 md:w-2/3 bg-stone-50">
+            <div
+              class="bg-white border border-stone-200 rounded-xl p-4 shadow-sm mb-4">
+              <div
+                class="text-xs text-stone-500 font-bold mb-1 uppercase tracking-wider">
+                短期 (1-3個月)
+              </div>
+              <div class="text-sm text-stone-800">
+                雖然受惠於近期 AI 伺服器題材發酵，但量化雷達顯示日線 RSI
+                已嚴重頂背離，且 MEVM 顯示當前股價勝率僅剩
+                18%。建議切勿追高，防守點設於 20MA，隨時準備獲利了結。
+              </div>
+            </div>
+            <div
+              class="bg-white border border-stone-200 rounded-xl p-4 shadow-sm">
+              <div
+                class="text-xs text-stone-500 font-bold mb-1 uppercase tracking-wider">
+                長期 (6-12個月)
+              </div>
+              <div class="text-sm text-stone-800">
+                RTS 評分達 0.72
+                觸發估值躍升。公司毛利率具備結構性擴張，不受短期景氣循環影響。若股價回測年線附近，將是極佳的戰略建倉點。
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 👇 新增：系統操作指引 (Op Guide) 區塊 -->
+      <div id="sec-guide" class="max-w-5xl mx-auto hidden fade-in">
+        <div class="mb-8">
+          <h2 class="text-3xl font-black text-stone-800 mb-2">系統操作指引</h2>
+          <p class="text-stone-600">
+            快速掌握 QNRE 系統的各項互動按鈕與功能介面
+          </p>
+        </div>
+
+        <!-- Guide 1: 數據與技術雷達 -->
+        <div
+          class="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm mb-8">
+          <h3
+            class="text-xl font-bold text-stone-800 mb-4 flex items-center gap-2">
+            <span>📡</span> 數據與技術雷達
+          </h3>
+          <div class="grid md:grid-cols-2 gap-6 items-start">
+            <div class="space-y-4">
+              <ul class="space-y-3 text-sm text-stone-600">
+                <li class="leading-relaxed">
+                  <span
+                    class="inline-block bg-stone-100 border border-stone-300 px-2 py-1 rounded text-stone-700 font-bold mb-1"
+                    >日線 / 週線 切換</span
+                  ><br />
+                  點擊按鈕可強制切換技術指標的分析週期。系統預設會依大盤位階智能選擇（例如過熱時切日線，打底時切週線）。
+                </li>
+                <li class="leading-relaxed">
+                  <span
+                    class="inline-block bg-cyan-50 border border-cyan-200 px-2 py-1 rounded text-cyan-700 font-bold mb-1"
+                    >⚡ AI 短線技術分析 按鈕</span
+                  ><br />
+                  點擊後，系統將打包技術面訊號與籌碼動能數據，交由大語言模型產出極具實戰價值的短線戰術報告。
+                </li>
+                <li class="leading-relaxed">
+                  <span
+                    class="inline-block bg-amber-50 border border-amber-200 px-2 py-1 rounded text-amber-700 font-bold mb-1"
+                    >ⓘ Tooltip 懸浮提示</span
+                  ><br />
+                  滑鼠游標移至指標名稱（如 RSI、MACD、KD
+                  上方），可開啟專屬彈出框，查看詳細的波峰/背離比對數據與計算公式。
+                </li>
+              </ul>
+            </div>
+            <!-- Image Placeholder 1 -->
+            <div
+              class="bg-stone-100 border-2 border-dashed border-stone-300 rounded-xl h-72 flex flex-col items-center justify-center text-stone-500 relative overflow-hidden group">
+              <!-- 💡 請將您上傳的技術雷達圖片名稱替換到 src 中並解除註解 -->
+              <!-- <img src="image_ed6eb3.png" alt="技術雷達介面" class="absolute inset-0 w-full h-full object-cover z-10" /> -->
+              <span
+                class="text-4xl mb-2 group-hover:scale-110 transition-transform"
+                >📸</span
+              >
+              <span class="text-sm font-medium"
+                >在此插入【技術雷達】介面截圖</span
+              >
+              <span class="text-xs text-stone-400 mt-1 font-mono"
+                >&lt;img src="image_ed6eb3.png" /&gt;</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Guide 2: 估值核心與 MEVM -->
+        <div
+          class="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm mb-8">
+          <h3
+            class="text-xl font-bold text-stone-800 mb-4 flex items-center gap-2">
+            <span>⚙️</span> 估值核心與 MEVM 引擎
+          </h3>
+          <div class="grid md:grid-cols-2 gap-6 items-start">
+            <div class="space-y-4">
+              <ul class="space-y-3 text-sm text-stone-600">
+                <li class="leading-relaxed">
+                  <span
+                    class="inline-block bg-stone-100 border border-stone-300 px-2 py-1 rounded text-stone-700 font-bold mb-1"
+                    >手動編輯資料 按鈕</span
+                  ><br />
+                  點擊可開啟全域編輯面板，自行修改股價、EPS
+                  或其它量化參數，系統將即時重新推算所有合理價矩陣。
+                </li>
+                <li class="leading-relaxed">
+                  <span
+                    class="inline-block bg-indigo-50 border border-indigo-200 px-2 py-1 rounded text-indigo-700 font-bold mb-1"
+                    >🔮 風險分析 (MEVM) 按鈕</span
+                  ><br />
+                  在「投資風險」區塊內，點擊可展開逆向推演圖表，查看目前股價究竟透支了未來多少季的獲利。
+                </li>
+                <li class="leading-relaxed">
+                  <span
+                    class="inline-block bg-stone-100 border border-stone-300 px-2 py-1 rounded text-stone-700 font-bold mb-1"
+                    >保守 / 樂觀 情境切換</span
+                  ><br />
+                  在 MEVM
+                  圖表右上角，可切換市場預期情境（保守/基測/樂觀/激進），觀察不同泡沫係數下的機率變化。
+                </li>
+                <li class="leading-relaxed">
+                  <span
+                    class="inline-block bg-amber-50 border border-amber-200 px-2 py-1 rounded text-amber-700 font-bold mb-1"
+                    >機率衰減 Tooltip</span
+                  ><br />
+                  滑鼠移至「市場定價實現機率」卡片，可查看基於基準率謬誤的指數機率衰減明細與泡沫懲罰。
+                </li>
+              </ul>
+            </div>
+            <!-- Image Placeholder 2 -->
+            <div
+              class="bg-stone-100 border-2 border-dashed border-stone-300 rounded-xl h-72 flex flex-col items-center justify-center text-stone-500 relative overflow-hidden group">
+              <!-- 💡 請將您上傳的 MEVM 圖片名稱替換到 src 中並解除註解 -->
+              <!-- <img src="image_df5b36.png" alt="MEVM 介面" class="absolute inset-0 w-full h-full object-cover z-10" /> -->
+              <span
+                class="text-4xl mb-2 group-hover:scale-110 transition-transform"
+                >📸</span
+              >
+              <span class="text-sm font-medium"
+                >在此插入【估值與 MEVM】介面截圖</span
+              >
+              <span class="text-xs text-stone-400 mt-1 font-mono"
+                >&lt;img src="image_df5b36.png" /&gt;</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Guide 3: AI 與資金策略 -->
+        <div
+          class="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm mb-8">
+          <h3
+            class="text-xl font-bold text-stone-800 mb-4 flex items-center gap-2">
+            <span>🧠</span> AI 分析與資金策略
+          </h3>
+          <div class="grid md:grid-cols-2 gap-6 items-start">
+            <div class="space-y-4">
+              <ul class="space-y-3 text-sm text-stone-600">
+                <li class="leading-relaxed">
+                  <span
+                    class="inline-block bg-stone-100 border border-stone-300 px-2 py-1 rounded text-stone-700 font-bold mb-1"
+                    >左側大盤 / 右側個股 切換</span
+                  ><br />
+                  六階梯資金配置矩陣的左上角開關，切換「右側」則依據個股乖離配置資金；切換「左側」則以大盤加權指數的位階控管總倉位。
+                </li>
+                <li class="leading-relaxed">
+                  <span
+                    class="inline-block bg-stone-100 border border-stone-300 px-2 py-1 rounded text-stone-700 font-bold mb-1"
+                    >穩健型 / 激進型 模式切換</span
+                  ><br />
+                  進入「左側大盤」模式後，可選擇以季線(60MA)防守的穩健型，或以月線(20MA)試單的激進型策略。
+                </li>
+                <li class="leading-relaxed">
+                  <span
+                    class="inline-block bg-sky-50 border border-sky-200 px-2 py-1 rounded text-sky-700 font-bold mb-1"
+                    >📋 複製 AI 分析指令 按鈕</span
+                  ><br />
+                  位於報告最下方。點擊將自動打包當前股票的所有量化參數（含
+                  RTS、MEVM、技術訊號），轉換為完美的 JSON Prompt
+                  格式，方便您貼到外部的 ChatGPT 或 Claude 進行更深入的討論。
+                </li>
+              </ul>
+            </div>
+            <!-- Image Placeholder 3 -->
+            <div
+              class="bg-stone-100 border-2 border-dashed border-stone-300 rounded-xl h-72 flex flex-col items-center justify-center text-stone-500 relative overflow-hidden group">
+              <!-- 💡 請將您的策略或 AI 面板截圖名稱替換到 src 中並解除註解 -->
+              <!-- <img src="您的截圖.png" alt="資金配置介面" class="absolute inset-0 w-full h-full object-cover z-10" /> -->
+              <span
+                class="text-4xl mb-2 group-hover:scale-110 transition-transform"
+                >📸</span
+              >
+              <span class="text-sm font-medium"
+                >在此插入【部位配置與 AI】介面截圖</span
+              >
+              <span class="text-xs text-stone-400 mt-1 font-mono"
+                >&lt;img src="..." /&gt; 解除註解即可顯示</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      const state = {
+        currentNav: "overview",
+        currentValTab: "eps",
+        recessionMode: false,
+        charts: {},
+      };
+
+      function nav(section) {
+        document.querySelectorAll("nav button").forEach((btn) => {
+          btn.classList.remove("nav-active");
+          btn.classList.add("text-stone-600", "hover:bg-stone-100");
+        });
+        document.getElementById(`nav-${section}`).classList.add("nav-active");
+        document
+          .getElementById(`nav-${section}`)
+          .classList.remove("text-stone-600", "hover:bg-stone-100");
+
+        document
+          .querySelectorAll("main > div")
+          .forEach((div) => div.classList.add("hidden"));
+        document.getElementById(`sec-${section}`).classList.remove("hidden");
+
+        if (section === "valuation") renderEpsChart();
+      }
+
+      function valTab(tab) {
+        document
+          .querySelectorAll("#sec-valuation > div.flex > button")
+          .forEach((btn) => {
+            btn.classList.remove("tab-active");
+            btn.classList.add("text-stone-500");
+          });
+        document.getElementById(`tab-${tab}`).classList.add("tab-active");
+        document
+          .getElementById(`tab-${tab}`)
+          .classList.remove("text-stone-500");
+
+        document
+          .querySelectorAll("#sec-valuation > div.fade-in")
+          .forEach((div) => div.classList.add("hidden"));
+        document.getElementById(`v-${tab}`).classList.remove("hidden");
+
+        if (tab === "eps") renderEpsChart();
+        if (tab === "mevm") renderMevmChart();
+      }
+
+      function toggleRecession() {
+        state.recessionMode = !state.recessionMode;
+        const statusText = document.getElementById("eps-status-text");
+        if (state.recessionMode) {
+          statusText.innerHTML =
+            '<span class="text-amber-600 font-bold">⚠️ 景氣逆風啟動：大盤跌破年線。防禦機制強制調升 Rolling (已實現獲利) 權重，降低預估風險。</span>';
+        } else {
+          statusText.innerHTML =
+            "目前狀態：正常市場。科技股側重趨勢預估，金融股側重歷史實績。";
+        }
+        renderEpsChart();
+      }
+
+      function renderEpsChart() {
+        const ctx = document.getElementById("epsChart").getContext("2d");
+        if (state.charts.eps) state.charts.eps.destroy();
+
+        const dataNormal = { tech: [40, 60], finance: [80, 20] };
+        const dataRecession = {
+          tech: [60, 40], // Shifted +20% to rolling
+          finance: [100, 0], // Shifted +20% to rolling
+        };
+
+        const currentData = state.recessionMode ? dataRecession : dataNormal;
+
+        state.charts.eps = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: ["科技股 (AI/半導體)", "金融/防禦股"],
+            datasets: [
+              {
+                label: "Rolling (已實現歷史獲利)",
+                data: [currentData.tech[0], currentData.finance[0]],
+                backgroundColor: "#94a3b8", // stone-400
+                barPercentage: 0.6,
+              },
+              {
+                label: "Trend (營收動能預估)",
+                data: [currentData.tech[1], currentData.finance[1]],
+                backgroundColor: "#0ea5e9", // sky-500
+                barPercentage: 0.6,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: "y",
+            scales: {
+              x: {
+                stacked: true,
+                max: 100,
+                title: { display: true, text: "權重比例 (%)" },
+              },
+              y: { stacked: true },
+            },
+            plugins: {
+              legend: { position: "top" },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    return (
+                      context.dataset.label + ": " + context.parsed.x + "%"
+                    );
+                  },
+                },
+              },
+            },
+          },
+        });
+      }
+
+      function renderMevmChart() {
+        const ctx = document.getElementById("mevmChart").getContext("2d");
+        if (state.charts.mevm) return; // Only init once unless data changes dynamically
+
+        const quarters = Array.from({ length: 12 }, (_, i) => i + 1);
+        // Example exponential decay: 100 * (0.85 ^ quarters)
+        const decayRate = 0.85;
+        const probabilities = quarters.map((q) =>
+          Math.max(0, 100 * Math.pow(decayRate, q)),
+        );
+
+        state.charts.mevm = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: quarters.map((q) => `Q+${q}`),
+            datasets: [
+              {
+                label: "實現機率 (%)",
+                data: probabilities,
+                borderColor: "#f43f5e", // rose-500
+                backgroundColor: "rgba(244, 63, 94, 0.1)",
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: "#f43f5e",
+                pointRadius: 4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: { beginAtZero: true, max: 100, grid: { color: "#e5e7eb" } },
+              x: { grid: { display: false } },
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    return "達標機率: " + context.parsed.y.toFixed(1) + "%";
+                  },
+                },
+              },
+            },
+          },
+        });
+      }
+
+      // Initialize first view charts just in case
+      renderEpsChart();
+    </script>
+  </body>
+</html>
