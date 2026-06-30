@@ -28,9 +28,19 @@
   <body
     class="flex flex-col lg:flex-row min-h-screen lg:h-screen lg:overflow-hidden antialiased selection:bg-sky-200 selection:text-sky-900 font-sans bg-[#f5f5f4] text-[#292524] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-[#f5f5f4] [&::-webkit-scrollbar-thumb]:bg-[#d6d3d1] [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb:hover]:bg-[#a8a29e]">
     
-    <!-- 側邊導航列：在低於 1024px 的設備 (手機與平板) 上呈 Sticky 頂部固定，桌機版加入 lg:pt-20 讓選單往下對齊右側標題 -->
+    <!-- 側邊導航列：在低於 1024px 的設備 (手機與平板) 上呈 Sticky 頂部固定 -->
     <nav
-      class="sticky top-0 lg:relative w-full lg:w-56 bg-white border-b lg:border-r border-stone-200 flex flex-col z-30 shrink-0 shadow-sm lg:pt-20">
+      class="sticky top-0 lg:relative w-full lg:w-56 bg-white border-b lg:border-r border-stone-200 flex flex-col z-30 shrink-0 shadow-sm">
+      <div class="p-5 border-b border-stone-200 bg-stone-900 lg:bg-white text-white lg:text-stone-800">
+        <h1
+          class="text-xl lg:text-2xl font-black tracking-tight leading-tight flex items-center gap-2">
+          <span>📊</span>
+          <div>
+            QNRE
+            <br /><span class="text-xs font-semibold text-stone-400 lg:text-stone-500">量化敘事風險引擎</span>
+          </div>
+        </h1>
+      </div>
       
       <!-- 導航頁籤區：寬度不夠時自動隱藏滾動條，並支援兩端半透明滑動按鈕 -->
       <div class="relative group bg-white">
@@ -42,9 +52,15 @@
           class="flex flex-row lg:flex-col overflow-x-auto lg:overflow-visible py-2 lg:py-4 gap-1 px-3 bg-white no-scrollbar scroll-smooth relative">
           
           <button
+            onclick="nav('foreword')"
+            id="nav-foreword"
+            class="nav-btn bg-sky-100 text-sky-700 font-bold border-b-2 lg:border-b-0 lg:border-r-4 border-sky-600 flex items-center gap-2 px-4 py-3 text-[16px] rounded-lg whitespace-nowrap transition-all">
+            <span>👁️</span> 操盤手前言
+          </button>
+          <button
             onclick="nav('overview')"
             id="nav-overview"
-            class="nav-btn bg-sky-100 text-sky-700 font-bold border-b-2 lg:border-b-0 lg:border-r-4 border-sky-600 flex items-center gap-2 px-4 py-3 text-[16px] rounded-lg whitespace-nowrap transition-all">
+            class="nav-btn text-stone-600 font-normal border-b-2 lg:border-b-0 lg:border-r-4 border-transparent hover:bg-stone-100 flex items-center gap-2 px-4 py-3 text-[16px] rounded-lg whitespace-nowrap transition-all">
             <span>🧭</span> 系統概覽
           </button>
           <button
@@ -88,8 +104,160 @@
     <main
       class="flex-1 lg:overflow-y-auto bg-stone-50 p-4 sm:p-6 lg:p-10 relative">
       
+      <!-- 👁️ SECTION 0: 操盤手前言 -->
+      <div id="sec-foreword" class="max-w-5xl mx-auto animate-fade-in sec-content">
+        <div class="mb-6 text-center lg:text-left">
+          <span
+            class="inline-block py-1 px-3 rounded-full bg-indigo-100 text-indigo-800 text-[14px] font-bold tracking-widest mb-3"
+            >MINDSET x STRATEGY</span
+          >
+          <h2
+            class="text-3xl lg:text-4xl font-black text-stone-800 mb-2 leading-tight">
+            👁️ 操盤手前言：<br class="block lg:hidden" />估值哲學與博弈對弈論
+          </h2>
+        </div>
+
+        <div
+          class="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm mb-8 text-base text-stone-600 leading-relaxed font-sans">
+          <p class="mb-3">
+            在進入任何量化運算之前，你必須先釐清「價值」與「價格」的真實定義。無數散戶在市場中賠錢，是因為他們盲信法人報告裡的「絕對合理價」，卻不知道對機構大人而言，<strong class="text-indigo-700">估值定價本質上是一場「科學、文學與心理學」交織的自我實現預言。</strong>
+          </p>
+          <p>
+            本手冊的設計哲學，正是建立在以下「二元對立」的架構上：
+          </p>
+        </div>
+
+        <!-- ⚖️ 上篇：估值哲學 -->
+        <div class="mb-10 space-y-4">
+          <h3 class="text-2xl font-bold text-stone-800 flex items-center gap-2 border-b border-stone-300 pb-3">
+            <span>⚖️</span> 上篇：估值哲學 ── 理解市場如何定價
+            <span class="text-sm bg-stone-200 text-stone-600 px-2.5 py-1 rounded-md ml-2 font-normal hidden sm:inline-block">企業價值與市場定價解耦</span>
+          </h3>
+          
+          <div class="bg-gradient-to-br from-sky-50 to-white p-6 md:p-8 rounded-2xl border border-sky-100 shadow-sm text-base text-stone-700 leading-relaxed space-y-5">
+            <p class="text-lg md:text-xl font-bold text-sky-800 italic border-l-4 border-sky-500 pl-4 py-1">
+              「企業的價值與股價，並不是同一件事。」
+            </p>
+            <p>
+              企業的獲利能力，可以透過營收、毛利率、費用率與產業趨勢推估，因此 EPS 的預測雖然仍有誤差，但主要建立在企業基本面的「客觀科學分析」上。然而，<strong>本益比（PE）</strong>代表的是市場願意為同一份獲利支付多少價格，其本質反映的是市場情緒、風險偏好、資金環境與未來預期，因此具有高度的主觀性。
+            </p>
+            <p>
+              相較於 EPS，PE 並不存在唯一正確的答案。相同的企業，在不同的景氣循環、利率環境與市場情緒下，都可能獲得截然不同的估值。
+            </p>
+            
+            <div class="bg-white p-5 rounded-xl border border-sky-200 shadow-sm my-5">
+              <p class="font-bold text-sky-900 mb-3 text-lg">
+                🎯 核心分離思維：
+              </p>
+              <p class="mb-3 text-stone-600">因此，本系統將市場因素主要納入 PE，而非頻繁調整 EPS。我們希望將「企業價值」與「市場定價」分開思考：</p>
+              <ul class="space-y-2 text-stone-600 pl-2">
+                <li class="flex items-start gap-2">
+                  <span class="text-sky-500 mt-1">✔</span>
+                  <span>讓 <strong>EPS</strong> 專注反映企業最純粹的獲利能力，不被短線喧囂輕易污染。</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-sky-500 mt-1">✔</span>
+                  <span>讓 <strong>PE</strong> 反映市場對未來的定價，並將所有的市場情緒、籌碼擁擠度與大盤引力鎖在 PE 的乘數裡。</span>
+                </li>
+              </ul>
+            </div>
+            
+            <p>
+              研究報告中的目標價，也應理解為一種估值觀點，而非絕對真實價值。分析師除了評估企業本身，也必須判斷市場願意接受什麼樣的估值，因此目標價往往會隨著市場共識、產業敘事與風險偏好持續修正。對投資人而言，與其將目標價視為終點，不如將其視為市場共識在不同時間點的具體呈現。
+            </p>
+            
+            <div class="bg-sky-800 text-white p-4 rounded-xl text-center font-bold tracking-wide mt-4 shadow-md">
+              本系統並不追求一個永遠正確的「合理價」，而是建立一套能同時描述企業基本面與市場估值變化的「動態坐標系」。
+            </div>
+          </div>
+        </div>
+
+        <!-- ⚔️ 下篇：博弈實戰 -->
+        <div class="mb-8 space-y-4">
+          <h3 class="text-2xl font-bold text-stone-800 flex items-center gap-2 border-b border-stone-300 pb-3">
+            <span>⚔️</span> 下篇：博弈實戰 ── 扒光法人的籌碼操縱術
+            <span class="text-sm bg-rose-100 text-rose-700 px-2.5 py-1 rounded-md ml-2 font-normal hidden sm:inline-block">小蝦米對抗大鯨魚</span>
+          </h3>
+          <p class="text-base text-stone-600 px-2">
+            在理解了理性的架構後，你必須立刻換上冷酷的博弈面具。在實戰戰場上，你必須扒光法人的「國王新衣」，看穿本益比是如何成為他們操縱共識的魔術棒：
+          </p>
+          
+          <div class="grid lg:grid-cols-3 gap-6 mt-5">
+            <!-- Card 1 -->
+            <div class="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm flex flex-col hover:shadow-md transition-shadow">
+              <h4 class="text-lg font-bold text-stone-800 mb-4 flex items-start gap-2.5 leading-snug">
+                <span class="text-2xl bg-purple-100/50 p-1.5 rounded-xl leading-none mt-1 shrink-0">1️⃣</span>
+                <span>本益比是法人的「配平數字」與估值橡皮筋</span>
+              </h4>
+              <div class="text-base text-stone-600 space-y-3 leading-relaxed flex-1">
+                <p>在財務模型裡，表面上公式是 <code class="bg-stone-100 px-1.5 py-0.5 rounded text-stone-800 font-mono text-sm">EPS × PE = 目標價</code>。但實務上，外資研究員寫報告時往往是倒過來算的：</p>
+                <ul class="list-none space-y-2 ml-1 text-sm text-stone-500">
+                  <li class="flex items-start gap-1.5">
+                    <span class="text-purple-400">•</span>
+                    <span>先看著線型與熱度，決定一個想喊的目標價（如想喊 2,000 試風向）。</span>
+                  </li>
+                  <li class="flex items-start gap-1.5">
+                    <span class="text-purple-400">•</span>
+                    <span>接著代入認真算出的預估 EPS（假設 100 元）。為了讓公式成立，就把 PE 填上 20 倍。</span>
+                  </li>
+                  <li class="flex items-start gap-1.5">
+                    <span class="text-purple-400">•</span>
+                    <span>若隔天股價漲了，想把目標價提到 2,500，只需寫一句「鑑於 AI 綜效顯現，上調本益比至 25 倍」，數學就又通了。</span>
+                  </li>
+                </ul>
+              </div>
+              <div class="text-purple-700 font-bold mt-4 bg-purple-50 p-3 rounded-xl border border-purple-100 text-sm text-center">
+                本益比怎麼解釋都通，它只是一個用來合理化股價行為的橡皮筋。
+              </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm flex flex-col hover:shadow-md transition-shadow">
+              <h4 class="text-lg font-bold text-stone-800 mb-4 flex items-start gap-2.5 leading-snug">
+                <span class="text-2xl bg-amber-100/50 p-1.5 rounded-xl leading-none mt-1 shrink-0">2️⃣</span>
+                <span>「凱因斯選美理論」：合不合理不重要，共識才重要</span>
+              </h4>
+              <div class="text-base text-stone-600 space-y-3 leading-relaxed flex-1">
+                <p>法人非常清楚，所謂的「絕對合理價」根本不存在。他們寫報告、喊目標價，本質上是一種<strong>「宣傳與共識凝聚」</strong>。</p>
+                <p>當一家大外資開第一槍調高目標價，其他外資為了績效不落後，就會跟進報告，這時「共識」就形成了。</p>
+                <p>一旦共識形成，資金就會瘋狂湧入，股價自然朝著目標價前進。這就是「自我實現預言」。</p>
+              </div>
+              <div class="text-amber-700 font-bold mt-4 bg-amber-50 p-3 rounded-xl border border-amber-100 text-sm text-center">
+                線是他們畫的，風向是他們帶的，他們只要當那個點火的人就好。
+              </div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm flex flex-col hover:shadow-md transition-shadow">
+              <h4 class="text-lg font-bold text-stone-800 mb-4 flex items-start gap-2.5 leading-snug">
+                <span class="text-2xl bg-rose-100/50 p-1.5 rounded-xl leading-none mt-1 shrink-0">3️⃣</span>
+                <span>「切香腸式」階梯喊價的收割秘密</span>
+              </h4>
+              <div class="text-base text-stone-600 space-y-3 leading-relaxed flex-1">
+                <p>為什麼法人不一次給出他們真正推估的合理價？因為法人手上的股票動輒幾千幾萬張，需要巨大的流動性才能安全進出。</p>
+                <p>如果最終目標是 3,000 元，他們會先出報告喊 1,800 元。當散戶跟風推到 1,750 元時，法人就在這高位階<strong>「一邊出貨、一邊反向測試買盤強度」</strong>。</p>
+                <p>如果市場瘋狂進場，就再出報告把目標上調到 2,400 元誘敵深入。</p>
+              </div>
+              <div class="text-rose-700 font-bold mt-4 bg-rose-50 p-3 rounded-xl border border-rose-100 text-sm text-center">
+                這種「切香腸式」喊價法，才能創造源源不絕的交易量，讓法人分批結帳。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 💡 操盤手守則 -->
+        <div class="bg-stone-900 p-6 lg:p-8 rounded-2xl border border-stone-800 shadow-lg text-white mt-8 mb-6">
+          <h4 class="text-xl font-bold text-amber-400 mb-3 flex items-center gap-2">
+            <span>💡</span> 操盤手守則
+          </h4>
+          <p class="text-base lg:text-lg text-stone-300 leading-relaxed font-sans">
+            不要去猜法人要把線畫到哪，我們要用冷酷的量化模型，去測出法人的<strong>保底防禦在哪（盾）</strong>，再用短線雷達看<strong>主力什麼時候點火（矛）</strong>。雙劍合璧，你才能在大風大浪中，像機構大人一樣冷靜操盤。
+          </p>
+        </div>
+      </div>
+
       <!-- 🧭 SECTION 1: 系統概覽 -->
-      <div id="sec-overview" class="max-w-5xl mx-auto animate-fade-in sec-content">
+      <div id="sec-overview" class="max-w-5xl mx-auto hidden animate-fade-in sec-content">
         <div class="mb-6 text-center lg:text-left">
           <span
             class="inline-block py-1 px-3 rounded-full bg-sky-100 text-sky-800 text-[14px] font-bold tracking-widest mb-3"
@@ -99,6 +267,7 @@
             class="text-3xl lg:text-4xl font-black text-stone-800 mb-2 leading-tight">
             QNRE 量化敘事風險引擎
           </h2>
+          <p class="text-stone-500 text-base">結合「量化大數據（Quant）」與「市場預期故事（Narrative）」的決策核心</p>
         </div>
 
         <div
@@ -406,34 +575,34 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                 <div class="bg-stone-50 border border-stone-200 p-4 rounded-xl flex flex-col justify-between hover:shadow-md transition-shadow">
                   <div>
-                    <span class="text-xs font-bold text-rose-700 bg-rose-100/80 px-2 py-0.5 rounded tracking-wide">A 級 (極高估值起點)</span>
+                    <span class="text-sm font-bold text-rose-700 bg-rose-100/80 px-2 py-0.5 rounded tracking-wide">A 級 (極高估值起點)</span>
                     <h5 class="text-base font-bold text-stone-800 mt-2.5">全球絕對壟斷 / 制定規格者</h5>
                   </div>
-                  <p class="text-sm text-stone-500 mt-2 leading-relaxed">如先進封裝、ASIC/IP龍頭。具備極高不可替代之護城河，<span class="inline-block">市場願意給予極高溢價。</span></p>
+                  <p class="text-base text-stone-500 mt-2 leading-relaxed">如先進封裝、ASIC/IP龍頭。具備極高不可替代之護城河，<span class="inline-block">市場願意給予極高溢價。</span></p>
                 </div>
                 
                 <div class="bg-stone-50 border border-stone-200 p-4 rounded-xl flex flex-col justify-between hover:shadow-md transition-shadow">
                   <div>
-                    <span class="text-xs font-bold text-indigo-700 bg-indigo-100/80 px-2 py-0.5 rounded tracking-wide">B 級 (高估值起點)</span>
+                    <span class="text-sm font-bold text-indigo-700 bg-indigo-100/80 px-2 py-0.5 rounded tracking-wide">B 級 (高估值起點)</span>
                     <h5 class="text-base font-bold text-stone-800 mt-2.5">結構性高成長 / 尖端基礎設施</h5>
                   </div>
-                  <p class="text-sm text-stone-500 mt-2 leading-relaxed">深度參與全球 AI 基礎建設或高階雲端核心供應鏈，<span class="inline-block">具備強大結構成長動能。</span></p>
+                  <p class="text-base text-stone-500 mt-2 leading-relaxed">深度參與全球 AI 基礎建設或高階雲端核心供應鏈，<span class="inline-block">具備強大結構成長動能。</span></p>
                 </div>
                 
                 <div class="bg-stone-50 border border-stone-200 p-4 rounded-xl flex flex-col justify-between hover:shadow-md transition-shadow">
                   <div>
-                    <span class="text-xs font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded tracking-wide">C 級 (中低估值起點)</span>
+                    <span class="text-sm font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded tracking-wide">C 級 (中低估值起點)</span>
                     <h5 class="text-base font-bold text-stone-800 mt-2.5">成熟型科技 / 景氣循環</h5>
                   </div>
-                  <p class="text-sm text-stone-500 mt-2 leading-relaxed">獲利與換機潮或國際大宗商品報價高度相關，在獲利高峰時系統防禦性給予中低本益比。</p>
+                  <p class="text-base text-stone-500 mt-2 leading-relaxed">獲利與換機潮或國際大宗商品報價高度相關，在獲利高峰時系統防禦性給予中低本益比。</p>
                 </div>
                 
                 <div class="bg-stone-50 border border-stone-200 p-4 rounded-xl flex flex-col justify-between hover:shadow-md transition-shadow">
                   <div>
-                    <span class="text-xs font-bold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded tracking-wide">D 級 (防禦估值起點)</span>
+                    <span class="text-sm font-bold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded tracking-wide">D 級 (防禦估值起點)</span>
                     <h5 class="text-base font-bold text-stone-800 mt-2.5">內需防禦 / 低增長高現金流</h5>
                   </div>
-                  <p class="text-sm text-stone-500 mt-2 leading-relaxed">營收與獲利成長穩定偏低，市場定價主體完全以「高股息」與「資產清算價值」為主。</p>
+                  <p class="text-base text-stone-500 mt-2 leading-relaxed">營收與獲利成長穩定偏低，市場定價主體完全以「高股息」與「資產清算價值」為主。</p>
                 </div>
               </div>
             </div>
@@ -448,7 +617,7 @@
                 </h4>
                 
                 <div class="my-3 p-4 bg-stone-900 text-sky-400 rounded-xl border border-stone-800 text-center font-bold shadow-inner text-sm md:text-base tracking-wide">
-                  結構得分 = 獲利穩定度 + 營收轉型度 + 週期脫鉤度
+                  結構得分 = 40% 獲利穩定度 + 30% 營收轉型度 + 30% 週期脫鉤度
                 </div>
                 
                 <ul class="text-base text-stone-600 list-disc list-inside space-y-2.5 leading-relaxed mt-4">
@@ -482,28 +651,28 @@
                       <span class="w-2 h-2 rounded-full bg-purple-400"></span>
                       <strong>基礎人氣溢價：</strong>
                     </div>
-                    <span class="pl-4 text-sm text-stone-500">依據市場資金聚焦的熱度給予估值溢價。</span>
+                    <span class="pl-4 text-sm md:text-base text-stone-500">依據市場資金聚焦的熱度給予估值溢價。</span>
                   </li>
                   <li class="flex flex-col gap-1">
                     <div class="flex items-center gap-2">
                       <span class="w-2 h-2 rounded-full bg-rose-400"></span>
                       <strong>潛在軋空動能：</strong>
                     </div>
-                    <span class="pl-4 text-sm text-stone-500">當券資比攀高且股價極為強勢時，空單將被視為潛在軋空的火箭柴火。</span>
+                    <span class="pl-4 text-sm md:text-base text-stone-500">當券資比攀高且股價極為強勢時，空單將被視為潛在軋空的火箭柴火。</span>
                   </li>
                   <li class="flex flex-col gap-1">
                     <div class="flex items-center gap-2">
                       <span class="w-2 h-2 rounded-full bg-amber-400"></span>
                       <strong>斷頭多殺多壓力：</strong>
                     </div>
-                    <span class="pl-4 text-sm text-stone-500">當融資暴增但股價卻跌破重要均線時，視為潛在多殺多賣壓，將扣減估值。</span>
+                    <span class="pl-4 text-sm md:text-base text-stone-500">當融資暴增但股價卻跌破重要均線時，視為潛在多殺多賣壓，將扣減估值。</span>
                   </li>
                   <li class="flex flex-col gap-1">
                     <div class="flex items-center gap-2">
                       <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
                       <strong>法人大戶連買：</strong>
                     </div>
-                    <span class="pl-4 text-sm text-stone-500">追蹤外資與投信連續買超的天數，直接轉換為大戶背書的安全溢價。</span>
+                    <span class="pl-4 text-sm md:text-base text-stone-500">追蹤外資與投信連續買超的天數，直接轉換為大戶背書的安全溢價。</span>
                   </li>
                 </ul>
               </div>
@@ -518,7 +687,7 @@
                   <span class="text-sm bg-rose-100 text-rose-800 px-2 py-0.5 rounded font-bold">安全限制</span>
                 </h4>
                 <ul class="text-base text-stone-600 space-y-4 leading-relaxed mt-3">
-                  <li>• <strong>平滑解封權重：</strong>根據股價與季線、月線的相對位置，平滑判定當前個股趨勢強弱，來控制上述「情緒溢價」能發揮的極限，<span class="inline-block">避免弱勢股亂漲。</span></li>
+                  <li>• <strong>平滑解封權重：</strong>根據股價與季線、月線的相對位置，判定當前個股趨勢強弱，來控制上述「情緒溢價」能發揮的極限，<span class="inline-block">避免弱勢股亂漲。</span></li>
                   <li>• <strong>MCF 崩盤防護：</strong>當大盤加權指數嚴重過熱、偏離年線過大時，系統會強制壓縮所有個股的本益比天花板，形成防護避震網，<span class="inline-block">避免在泡沫頂端給出不切實際的目標價。</span></li>
                 </ul>
               </div>
@@ -653,9 +822,11 @@
                 <div class="text-base text-stone-300 leading-relaxed mb-4">
                   傳統估值是利用 <strong class="text-white bg-stone-700 px-1.5 py-0.5 rounded mx-1">預估EPS × 預估PE = 目標股價</strong>。<span class="inline-block">這極易讓人陷入「無腦看好未來高成長」的敘事陷阱。</span>
                 </div>
-                <div class="text-base text-sky-200 leading-relaxed font-bold bg-sky-900/30 p-3 rounded-lg border border-sky-800/50">
+                <div class="text-base text-sky-200 leading-relaxed font-bold bg-sky-900/30 p-4 rounded-lg border border-sky-800/50 shadow-inner">
                   MEVM 是將「目前股價」逆向折算：<br/>
-                  <span class="text-white block mt-2 text-center text-lg">目前股價 ÷ 常態本益比 = 市場隱含目標 EPS</span>
+                  <div class="text-white block mt-3 text-center text-lg font-bold">
+                    目前股價 ÷ 常態本益比 = 市場隱含目標 EPS
+                  </div>
                 </div>
                 <p class="text-base text-stone-400 mt-4 leading-relaxed">
                   它直接解碼：當下買進這檔股票，代表你預設它在多少季內「完美不犯錯」地達標目標盈餘？
@@ -787,7 +958,7 @@
         </div>
       </div>
 
-      <!-- 🧠 SECTION 4: 部位與AI洞察 -->
+      <!-- 🧠 SECTION 4: 部位與 AI 洞察 -->
       <div
         id="sec-allocation"
         class="max-w-5xl mx-auto hidden animate-fade-in sec-content">
@@ -911,6 +1082,7 @@
             <h2 class="text-3xl font-black text-stone-800 mb-2">
               系統操作指引
             </h2>
+            <p class="text-stone-500 text-sm">快速掌握 QNRE 系統的各項互動按鈕與功能介面</p>
           </div>
         </div>
 
@@ -1306,7 +1478,7 @@
 
     <script>
       const state = {
-        currentNav: "overview",
+        currentNav: "foreword",
         currentValTab: "eps",
         currentGuideTab: "radar",
         recessionMode: false,
@@ -1477,9 +1649,9 @@
         });
       }
 
-      // 確保第一頁載入圖表
+      // 預設將操盤手前言設為第一頁
       window.onload = function() {
-        renderEpsChart();
+        // 第一頁不需渲染圖表
       };
     </script>
   </body>
