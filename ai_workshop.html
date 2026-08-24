@@ -1,0 +1,378 @@
+<!-- STREAMING_CHUNK: 建立 HTML 基礎架構與 CSS 樣式 -->
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 教師研習｜3 小時實戰工作坊</title>
+<style>
+:root{
+  --bg:#f5f7fb;--fg:#172033;--muted:#61708a;--accent:#4f46e5;--accent2:#06b6d4;
+  --card:#fff;--line:#e4e8f0;--soft:#eef2ff;--good:#eafaf2;--warn:#fff7df;
+  --shadow:0 10px 30px rgba(23,32,51,.08)
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;background:var(--bg);color:var(--fg);line-height:1.7}
+.header{padding:30px 24px;background:linear-gradient(135deg,#312e81,#4f46e5 55%,#0891b2);color:#fff}
+.header-inner{max-width:1180px;margin:auto}
+.header h1{font-size:clamp(28px,4vw,46px);margin:0 0 8px}
+.header p{margin:0;opacity:.92;font-size:18px}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.badge{padding:6px 11px;border:1px solid rgba(255,255,255,.3);border-radius:999px;background:rgba(255,255,255,.12)}
+.tabs{position:sticky;top:0;z-index:10;display:flex;gap:6px;overflow:auto;padding:8px max(12px,calc((100% - 1180px)/2));background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.tab{white-space:nowrap;padding:10px 14px;border-radius:10px;cursor:pointer;color:var(--muted);font-weight:700}
+.tab:hover,.tab.active{background:var(--soft);color:var(--accent)}
+.content{max-width:1180px;margin:auto;padding:24px}
+.section{display:none}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px;box-shadow:var(--shadow);margin-bottom:18px}
+.card h2{margin:0 0 12px;color:#312e81;font-size:26px}
+.card h3{margin:18px 0 8px;color:#334155;font-size:20px}
+.hero{padding:30px;background:linear-gradient(135deg,#eef2ff,#ecfeff);border:0}
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kpi div{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;text-align:center}
+.kpi strong{display:block;font-size:28px;color:var(--accent)}
+.timeline{display:grid;grid-template-columns:100px 1fr;gap:10px;align-items:start}
+.time{font-weight:800;color:var(--accent)}
+.tag{display:inline-block;padding:3px 9px;border-radius:999px;background:var(--soft);color:var(--accent);font-size:13px;font-weight:800}
+.good{background:var(--good);border-left:5px solid #16a34a;padding:13px 16px;border-radius:10px;margin-top:12px}
+.warn{background:var(--warn);border-left:5px solid #eab308;padding:13px 16px;border-radius:10px;margin:12px 0}
+.note{background:#f8fafc;border-left:5px solid var(--accent2);padding:13px 16px;border-radius:10px}
+.prompt{background:#0f172a;color:#e2e8f0;padding:18px;border-radius:12px;white-space:pre-wrap;overflow:auto;font-size:14px;margin-top:12px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:11px;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}
+th{background:#f8fafc}
+details{border:1px solid var(--line);border-radius:12px;padding:12px 15px;margin:9px 0;background:#fff}
+summary{cursor:pointer;font-weight:800}
+.checklist li{margin:.55em 0}
+a{color:var(--accent);text-decoration:none;border-bottom:1px dashed var(--accent);font-weight:600}
+a:hover{background:var(--soft)}
+code{background:#f1f5f9;padding:2px 6px;border-radius:5px}
+footer{color:var(--muted);text-align:center;padding:30px}
+@media(max-width:760px){
+ .content{padding:14px}.grid,.two{grid-template-columns:1fr}.kpi{grid-template-columns:1fr 1fr}
+ .timeline{grid-template-columns:72px 1fr}.card{padding:18px}
+}
+</style>
+<script>
+function showTab(id){
+ document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.id===id));
+ document.querySelectorAll('.section').forEach(s=>s.style.display=s.id===id?'block':'none');
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+window.onload=()=>showTab('overview');
+</script>
+</head>
+<body>
+<!-- STREAMING_CHUNK: 建立頂部標頭與導覽列 -->
+<header class="header">
+ <div class="header-inner">
+  <h1>AI 教師研習｜從「會問」到「做出作品」</h1>
+  <p>3 小時實戰工作坊｜國中小教師・無資訊背景也能跟著完成</p>
+  <div class="badges"><span class="badge">⏱ 180 分鐘</span><span class="badge">🎯 教學應用</span><span class="badge">🧪 動手實作</span><span class="badge">🌐 可分享作品</span></div>
+ </div>
+</header>
+
+<nav class="tabs">
+ <div class="tab" data-id="overview" onclick="showTab('overview')">① 課程地圖</div>
+ <div class="tab" data-id="ai" onclick="showTab('ai')">② AI 基礎與安全</div>
+ <div class="tab" data-id="prompt" onclick="showTab('prompt')">③ Prompt 企劃</div>
+ <div class="tab" data-id="canvas" onclick="showTab('canvas')">④ Canvas 雛型</div>
+ <div class="tab" data-id="vibe" onclick="showTab('vibe')">⑤ 外部編輯器除錯</div>
+ <div class="tab" data-id="project" onclick="showTab('project')">⑥ 專題擴充</div>
+ <div class="tab" data-id="publish" onclick="showTab('publish')">⑦ 發布作品</div>
+ <div class="tab" data-id="agent" onclick="showTab('agent')">⑧ 突破 Token 與 Agent</div>
+ <div class="tab" data-id="practice" onclick="showTab('practice')">⑨ 總結與資源</div>
+</nav>
+
+<main class="content">
+
+<!-- STREAMING_CHUNK: 渲染區塊 1 到 4 (概覽到 Canvas) -->
+<section class="section" id="overview">
+ <div class="card hero">
+  <h2>這堂課真正要帶您完成什麼？</h2>
+  <p>我們不是只來「聽工具介紹」，也不是每次練習都重頭來過。今天我們將貫徹「一個專案做到底」的流程，親手將一個點子孵化成完整的網站：</p>
+  <div class="kpi">
+   <div><strong>Step 1</strong>文字企劃 (Prompt)</div><div><strong>Step 2</strong>遊戲雛型 (Canvas)</div><div><strong>Step 3</strong>除錯打磨 (Vibe Coding)</div><div><strong>Step 4</strong>完整發布 (Vercel)</div>
+  </div>
+ </div>
+ <div class="grid">
+  <div class="card">
+   <h2>180 分鐘實戰節奏</h2>
+   <div class="timeline">
+    <div class="time">00–15</div><div><b>暖身</b>：AI 能做什麼？解決我們最常見的痛點</div>
+    <div class="time">15–35</div><div><b>AI 基礎＋安全</b>：幻覺、個資、版權與查證原則</div>
+    <div class="time">35–65</div><div><b>Prompt 企劃</b>：讓 AI 幫我們生出「遊戲題庫與架構」</div>
+    <div class="time">65–90</div><div><b>Canvas 雛型</b>：一鍵將題庫轉換成「互動小遊戲」</div>
+    <div class="time">90–100</div><div><b>中場休息</b></div>
+    <div class="time">100–130</div><div><b>外部除錯</b>：跳出網頁版陷阱，用編輯器局部修復跑版</div>
+    <div class="time">130–160</div><div><b>專題擴充</b>：為你的作品加上計分、動畫，完成大作</div>
+    <div class="time">160–172</div><div><b>發布</b>：放棄難用的內建分享，取得真正的專屬網址</div>
+    <div class="time">172–180</div><div><b>Agent 與下一步</b>：突破 Token 限制，迎向自動化</div>
+   </div>
+  </div>
+  <div class="card">
+   <h2>學習成果檢核</h2>
+   <ul class="checklist">
+    <li>能用「角色＋任務＋情境＋限制」產出教學企劃。</li>
+    <li>能敏銳判斷 AI 回答中哪些資訊需要查證。</li>
+    <li>能理解從「文本」到「互動網頁」的連貫生成邏輯。</li>
+    <li>能用外部編輯器協助「局部修改程式」，避免 AI 鬼打牆。</li>
+    <li>能不依賴 AI 平台的分享，把成果獨立部署成網址。</li>
+    <li>理解 AI Agent 如何協助我們突破現有免費額度的限制。</li>
+   </ul>
+  </div>
+ </div>
+</section>
+
+<section class="section" id="ai">
+ <div class="card">
+  <h2>② AI 基礎與教師使用安全</h2>
+  <p>在進入強大工具前，我們要先建立最關鍵的素養：「知道什麼能放心交給 AI、什麼不能直接相信」。</p>
+  <div class="two">
+   <div>
+    <h3>✅ AI 最擅長幫你做</h3>
+    <ul><li>腦力激盪與教案變體設計</li><li>文章改寫、難易度分級、長文摘要</li><li>發想題目與活動草稿</li><li>程式原型與互動教材生成</li></ul>
+   </div>
+   <div>
+    <h3>❌ AI 不應直接決定的事</h3>
+    <ul><li>對學生重要評量的最終判斷</li><li>未經查證的事實、歷史與數據</li><li>涉及學生個資的敏感內容（務必去識別化）</li><li>未確認授權的圖片直接出版</li></ul>
+   </div>
+  </div>
+ </div>
+</section>
+
+<section class="section" id="prompt">
+ <div class="card hero">
+  <h2>③ 第一階段：Prompt 實戰（產生專題企劃）</h2>
+  <p>為了讓後面的實作有連貫性，我們不要每次都叫 AI 寫新東西。現在，我們第一步先來規劃<b>「教學遊戲的文本與題庫」</b>。</p>
+  <p>推薦使用 <a href="https://chatgpt.com/" target="_blank">ChatGPT</a> 或 <a href="https://gemini.google.com/" target="_blank">Google Gemini</a> 進行這一步驟。</p>
+ </div>
+ <div class="card">
+  <h2>示範指令：請直接複製並修改以下內容送給 AI</h2>
+  <p>在這個階段，我們<b>不要 AI 寫程式</b>，只要它產出精準的「內容」。</p>
+  <div class="prompt">你是一位有 15 年經驗的國小自然科教師。
+我要做一個給六年級學生玩的『電與生活：導體與絕緣體』互動網頁遊戲。
+
+請幫我產出遊戲需要的文字企劃：
+1. 核心學習目標（1句話）
+2. 產生 10 個生活中常見的物品清單（5 個導體、5 個絕緣體）。
+3. 每個物品請提供：「物品名稱」、「所屬分類（導體/絕緣體）」以及「答錯時給學生的提示短語」。
+
+⚠️ 限制：
+- 先不要寫任何程式碼。
+- 物品請選擇小學生絕對看過的日常用品。
+- 請以結構化的 Markdown 表格呈現清單。</div>
+ </div>
+</section>
+
+<section class="section" id="canvas">
+ <div class="card hero">
+  <h2>④ 第二階段：Canvas（把企劃變成互動雛型）</h2>
+  <p>有了上一步的表格題庫後，我們不要自己辛苦重打。直接延續剛剛的對話視窗，使用支援程式碼渲染的平台（如 <a href="https://claude.ai/" target="_blank">Claude Artifacts</a> 或 <a href="https://gemini.google.com/" target="_blank">Gemini</a>）讓它一鍵變成網頁。</p>
+ </div>
+ <div class="grid">
+  <div class="card">
+   <h2>接續上一步的指令</h2>
+   <div class="prompt">太好了，這個題庫很棒！
+現在請根據你剛才提供的「10 個物品清單」，幫我寫一個單一檔案 (HTML+CSS+JS) 的網頁互動遊戲。
+
+介面與功能需求：
+1. 畫面上方有兩個大區域：「導體區」與「絕緣體區」。
+2. 畫面下方會隨機出現那 10 個物品的卡片。
+3. 學生可以點擊卡片，再點擊對應的區域來分類（或者提供拖曳功能）。
+4. 放對時卡片變綠色並消失，放錯時顯示你剛剛設計的「提示短語」。
+
+⚠️ 請輸出完整的 HTML 程式碼供我預覽。</div>
+  </div>
+  <div class="card">
+   <h2>Canvas 實作預期結果</h2>
+   <ul class="checklist">
+    <li>此時，您的右側畫面應該會直接跳出一個「可以玩」的小遊戲雛型。</li>
+    <li><b>老師親自玩玩看：</b>您會發現它堪用，但可能很陽春、顏色很醜，或者是「用手機螢幕看的時候，兩塊區域擠在一起變形了」。</li>
+    <li>👉 <b>不要立刻在 AI 網頁裡叫它修！</b> 這會落入下一節要講的「Token 陷阱」。</li>
+   </ul>
+  </div>
+ </div>
+</section>
+
+<!-- STREAMING_CHUNK: 渲染區塊 5 (Vibe Coding，加入外部編輯器介紹) -->
+<section class="section" id="vibe">
+ <div class="card hero">
+  <h2>⑤ 第三階段：Vibe Coding（用外部編輯器局部除錯）</h2>
+  <p>一開始用網頁版生出雛型很快，但當您在 Canvas 裡一直說「幫我改按鈕顏色」、「幫我修手機版」時，常常會遇到：<b>AI 把整個記分板功能搞壞、或是突然吐出殘缺的程式碼（鬼打牆）！</b></p>
+  <p>因為網頁版 AI 每次修改，經常是「整份檔案幾百行重寫」，極易出錯且浪費額度。</p>
+ </div>
+ <div class="card">
+  <h2>解法：引入外部編輯器進行「部分修改」</h2>
+  <p>將剛才 Canvas 產出的 HTML 程式碼完整複製，貼到電腦裡的外部編輯器，只讓 AI 針對壞掉的地方進行「局部手術」。</p>
+  <div class="two">
+   <div>
+    <h3>推薦編輯器工具</h3>
+    <ul>
+     <li><a href="https://code.visualstudio.com/" target="_blank">VS Code</a>：微軟免費的文字編輯器。把程式碼貼上去，只複製壞掉的那一段函數給 AI，讓它修好後再貼回 VS Code 取代。</li>
+     <li><a href="https://www.cursor.com/" target="_blank">Cursor</a> 或 <a href="https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview" target="_blank">Claude Code</a>：內建 AI 的進階編輯器。直接輸入「幫我把 index.html 裡的手機版排版修好」，它會自動找到該段落並修改。</li>
+    </ul>
+   </div>
+   <div>
+    <h3>這樣做的巨大優勢</h3>
+    <ul>
+     <li><b>不會牽一髮動全身：</b>原本好的功能絕對不會被 AI 誤刪。</li>
+     <li><b>省下大量 Token：</b>不用每次都讓 AI 讀取／吐出幾千行無關的程式碼。</li>
+     <li><b>找錯更精準：</b>有了行號，您更容易告訴 AI「第 45 行到 60 行的畫面在手機上怪怪的」。</li>
+    </ul>
+   </div>
+  </div>
+ </div>
+ <div class="card">
+  <h2>外部協作的除錯指令示範</h2>
+  <div class="prompt">請不要重寫整個專案，我只提供 CSS 中 `.container` 與 `.drop-zone` 相關的程式碼給你。
+
+問題：用手機版觀看時，導體與絕緣體兩個大區域太寬，超出了螢幕。
+要求：
+1. 保持桌機版的左右並排排版不變。
+2. 螢幕寬度小於 600px 時，將這兩個區域改為「上下排列」，寬度 100%。
+3. 請先說明你要修改哪幾個屬性，再給我「修改後的那一段程式碼」即可。
+
+（在此貼上您從編輯器複製出來的一小段 CSS 程式碼）</div>
+ </div>
+</section>
+
+<!-- STREAMING_CHUNK: 渲染區塊 6 與 7 (專題實作與發布，填補雙欄空缺) -->
+<section class="section" id="project">
+ <div class="card hero">
+  <h2>⑥ 第四階段：專題擴充（完成您的專屬大作）</h2>
+  <p>現在，您的「導體與絕緣體」遊戲不僅能動，而且在手機上也很完美了！最後一步，我們要利用外部編輯器，把這個雛型擴充成「完整的大作」，並替換成您自己的學科。</p>
+ </div>
+ <div class="grid">
+  <div class="card">
+   <h3>任務 1：替換為您的學科內容</h3>
+   <p>在您的 VS Code 裡找到剛剛的「題庫清單 (Array)」。您可以直接手動修改，把「鐵釘、塑膠尺」換成「國語成語」或「歷史事件」，遊戲邏輯完全不用動！</p>
+  </div>
+  <div class="card">
+   <h3>任務 2：增加進階遊戲機制</h3>
+   <p>複製您完整的程式碼給 AI，加上這段指令：<br>
+   <code>「請在現有基礎上，幫我加上 60 秒倒數計時器，以及當 10 個物品都分類完成後，會跳出『過關！您的總得分是 X 分』的彈出視窗動畫。」</code></p>
+  </div>
+ </div>
+</section>
+
+<section class="section" id="publish">
+ <div class="card hero">
+  <h2>⑦ 發布作品：讓成果變成真正的網站</h2>
+  <p>做好的網頁，大家一定會想：「Gemini 或 Claude 右上角不是有 <b>Share (分享)</b> 按鈕嗎？直接給學生這個網址不就好了？」</p>
+ </div>
+ <div class="card">
+  <h2>為什麼我們不推薦直接用 Canvas / Artifacts 分享？</h2>
+  <p>依賴 AI 平台內建分享，在教學現場會遇到極大的災難：</p>
+  <ul class="warn">
+   <li><b>網址冗長且會變動：</b>每次您發現錯字修改後，通常必須「重新產生一個新網址」，導致舊網址失效，學生拿到錯亂的版本。</li>
+   <li><b>畫面干擾：</b>分享出去的畫面常帶有 AI 平台的 Logo 或對話介面，看起來不像一個純粹獨立的「教學網站」。</li>
+   <li><b>生命週期受限：</b>有些平台的分享快取只要過了一段時間，或是平台政策改變，網址就會無預警失效。</li>
+  </ul>
+ </div>
+ 
+ <div class="two">
+   <div class="card">
+    <h3>真正的解法 (專業發布路線)</h3>
+    <p>我們將使用工程師標準的免費流程，讓您的作品永久、穩定地活在網路上：</p>
+    <div class="timeline">
+     <div class="time">1. 本機端</div><div>確認您的 <code>index.html</code> 在電腦上運作正常。</div>
+     <div class="time">2. GitHub</div><div>將程式碼免費存放到 <a href="https://github.com/" target="_blank">GitHub</a>（您的雲端原始碼保險箱）。</div>
+     <div class="time">3. Vercel</div><div>到 <a href="https://vercel.com/" target="_blank">Vercel</a> 綁定您的 GitHub。它會自動幫您變成一個 24 小時運作的真實網站！</div>
+    </div>
+    <div class="good"><b>最大好處：</b>未來只要在 GitHub 修改任何一個錯字，學生的網址不用換，重整畫面就會自動更新為最新版！</div>
+   </div>
+   
+   <!-- 新增的補齊區塊：不會佈署怎麼辦？善用 AI 教你 -->
+   <div class="card">
+    <h3>不會發布怎麼辦？讓 AI 當你的專屬助教！</h3>
+    <p>沒碰過 GitHub 或 Vercel 聽起來很嚇人？別擔心，<b>你完全不需要背任何複雜的「終端機指令碼」</b>。你已經有地表最強的工程師坐在你對面了，直接開口問 AI！</p>
+    <p>💡 <b>試著把這段指令直接貼給 ChatGPT 或 Claude：</b></p>
+    <div class="prompt">我是一名沒有資訊背景的老師。
+我現在手邊有一個已經寫好的 index.html 檔案。
+請用「最簡單的滑鼠點擊方式（千萬不要教我打黑畫面的終端機指令）」，
+一步一步教我如何完成以下兩件事：
+
+1. 如何註冊並把檔案上傳到 GitHub
+2. 如何串接 Vercel 並產生學生可以開啟的公開網址
+
+請確認你的步驟是目前 2024 年最新版的網頁介面流程。</div>
+   </div>
+ </div>
+</section>
+
+<!-- STREAMING_CHUNK: 渲染區塊 8 (AI Agent 與 Token 窘境) -->
+<section class="section" id="agent">
+ <div class="card">
+  <h2>⑧ 突破限制：AI Agent 概況與「Token 額度」窘境</h2>
+  <p>經過剛剛的開發流程，若您的專案稍微複雜一點，您可能已經遇到 AI 提示：<b>「您的免費使用量已達上限，請 4 小時後再試。」</b></p>
+ </div>
+ <div class="grid">
+  <div class="card">
+   <h2>為什麼 AI Agent 這麼吃額度？</h2>
+   <p>AI Agent（代理人）不只是回答問題，它為了幫你「寫完一個完整的遊戲」，在背後會：</p>
+   <ul class="checklist">
+    <li>不斷反覆讀取您貼給它的上千行程式碼（消耗大量上下文 Token）。</li>
+    <li>在您沒看到的地方自我除錯、推論再產出。</li>
+    <li><b>結果：</b>免費版的 ChatGPT 或 Claude 額度，可能不到半小時就耗盡，直接中斷您的備課節奏。</li>
+   </ul>
+  </div>
+  <div class="card">
+   <h2>我們的解法：引入 Hermes + FreeLLM API</h2>
+   <p>這就是為什麼我們要在這裡特別介紹開源生態的解法：</p>
+   <ul>
+    <li>透過強大的開源模型（如 <a href="https://huggingface.co/NousResearch/Hermes-3-Llama-3.1-8B" target="_blank">Hermes 3</a>），配合 <b>FreeLLM API</b> 服務。</li>
+    <li>您可以將這些 API 金鑰掛載到 Cursor 等外部編輯器中。</li>
+    <li><b>成效：</b>大幅突破商業平台的 Token 次數限制與記憶容量，以極低成本甚至免費，獲得一個穩定、不會忘記前文、可以瘋狂幫你改 Code 的專屬教學助理！</li>
+   </ul>
+  </div>
+ </div>
+</section>
+
+<!-- STREAMING_CHUNK: 渲染區塊 9 (總結與資源) -->
+<section class="section" id="practice">
+ <div class="card">
+  <h2>⑨ 總結與資源：讓實作延續到課堂</h2>
+  <p>恭喜您完成 180 分鐘的實戰旅程！從一個文字企劃，走到擁有自己專屬網址的互動網站，您已經完整體驗了 AI 時代的軟體創造力。</p>
+ </div>
+ <div class="grid">
+  <div class="card">
+   <h2>課後環境檢核</h2>
+   <ul class="checklist">
+    <li>是否已妥善保存您今日生成的 Prompt 提示詞模板？</li>
+    <li>是否已將實作的網頁程式碼下載，或發布至 Vercel 取得專屬網址？</li>
+    <li>是否理解了外部編輯器「局部修改」的重要性，不再被 Canvas 綁架？</li>
+    <li>最重要的是：您準備好在下週的課堂，讓學生玩您今天做出來的作品了嗎？</li>
+   </ul>
+  </div>
+  <div class="card">
+   <h2>常用工具快速連結</h2>
+   <ul>
+    <li><b>企劃與生成：</b><a href="https://chatgpt.com/" target="_blank">ChatGPT</a>、<a href="https://gemini.google.com/" target="_blank">Google Gemini</a>、<a href="https://claude.ai/" target="_blank">Claude</a></li>
+    <li><b>外部編輯器：</b><a href="https://code.visualstudio.com/" target="_blank">VS Code</a>、<a href="https://www.cursor.com/" target="_blank">Cursor</a></li>
+    <li><b>部署發布：</b><a href="https://github.com/" target="_blank">GitHub</a>、<a href="https://vercel.com/" target="_blank">Vercel</a></li>
+   </ul>
+  </div>
+ </div>
+ <div class="card">
+  <h2>離場前的「帶走一張紙」：您的實踐計畫</h2>
+  <div class="prompt">我目前最大的教學備課痛點：________________________
+
+我今天設計出的 Prompt 企劃模板：
+_______________________________________
+
+我今天成功發布的互動教學作品 (網址)：________________________
+
+我需要查證／注意的 AI 風險：_______________
+
+明天/下週，我會真的把它應用在【 _______ 】年級的【 _______ 】單元課程！</div>
+  <p class="good">完成這張表，比記住一堆 AI 工具名稱更重要。期待看見各位老師的課堂創意！</p>
+ </div>
+</section>
+
+</main>
+<footer>AI 教師研習｜3 小時實戰版 ｜ 核心：不再只聽工具，今天我們將點子化為真實作品！</footer>
+</body>
+</html>
